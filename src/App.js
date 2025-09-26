@@ -1,13 +1,20 @@
-// src/App.js - Verify this is your current App.js
+// src/App.js
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
-import BookingPortal from './components/BookingPortal'; // Should be BookingPortal, not CalendarView
+import BookingPortal from './components/BookingPortal';
+import CancellationPage from './components/CancellationPage';
 
 function App() {
   return (
-    <div className="App">
-      <BookingPortal />  {/* This should render the portal with view toggle */}
-    </div>
+    <Router>
+      <div className="App">
+        <Routes>
+          <Route path="/" element={<BookingPortal />} />
+          <Route path="/cancel-booking" element={<CancellationPage />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 

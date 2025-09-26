@@ -2,7 +2,7 @@
 const API_BASE_URL =  process.env.REACT_APP_API_URL || 'https://dome-booking-backend-production.up.railway.app/api/v1';
 
 // FORCE the correct UUID
-const FACILITY_UUID = '68ac6858af5c4d97311377c3';
+const FACILITY_UUID = '68cad6b20a06da55dfb88af5';
 
 class ApiService {
   constructor() {
