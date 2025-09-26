@@ -1,0 +1,73 @@
+C:\Users\Guest User\Downloads\Dome\Dome - Web Booking Platform\Dome-booking-frontend\dome-booking-frontend
+¦   .env
+¦   .env.local
+¦   .gitignore
+¦   folder_structure.txt
+¦   package-lock.json
+¦   package.json
+¦   postcss.config.js
+¦   README.md
+¦   tailwind.config.js
+¦   
++---.netlify
+¦   ¦   netlify.toml
+¦   ¦   state.json
+¦   ¦   
+¦   +---functions-internal
+¦   +---v1
+¦       +---functions
++---build
+¦   ¦   asset-manifest.json
+¦   ¦   favicon.ico
+¦   ¦   index.html
+¦   ¦   logo192.png
+¦   ¦   logo512.png
+¦   ¦   manifest.json
+¦   ¦   robots.txt
+¦   ¦   _redirects.txt
+¦   ¦   
+¦   +---static
+¦       +---css
+¦       ¦       main.5aca3c7d.css
+¦       ¦       main.5aca3c7d.css.map
+¦       ¦       
+¦       +---js
+¦               488.69497890.chunk.js
+¦               488.69497890.chunk.js.map
+¦               main.5b6a9703.js
+¦               main.5b6a9703.js.LICENSE.txt
+¦               main.5b6a9703.js.map
+¦               
++---node_modules
+¦   ¦   .package-lock.json
+¦      
+¦           
++---public
+¦       favicon.ico
+¦       index.html
+¦       logo192.png
+¦       logo512.png
+¦       manifest.json
+¦       robots.txt
+¦       _redirects.txt
+¦       
++---src
+    ¦   App.css
+    ¦   App.js
+    ¦   App.test.js
+    ¦   index.css
+    ¦   index.js
+    ¦   logo.svg
+    ¦   reportWebVitals.js
+    ¦   setupTests.js
+    ¦   
+    +---components
+    ¦       BookingForm.js
+    ¦       BookingPortal.js
+    ¦       CalendarView.js
+    ¦       PaymentView.js
+    ¦       ProgressIndicator.js
+    ¦       
+    +---services
+            api.js
+            
