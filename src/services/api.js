@@ -231,7 +231,7 @@ class ApiService {
     });
     console.log('✅ Discount result:', result);
     return result;
-  }
+  },
 
   async createPaymentIntent(amount, currency = 'cad') {
     const result = await this.request('/payment/create-payment-intent', {
@@ -239,7 +239,7 @@ class ApiService {
       body: { amount, currency },
     });
     return result;
-  }
+  },
 
   async processPayment(paymentData) {
     const result = await this.request('/payment/process-payment', {
@@ -247,7 +247,7 @@ class ApiService {
       body: paymentData,
     });
     return result.data || result;
-  }
+  },
 
   async getBookingDetails(bookingId) {
     try {
@@ -257,19 +257,7 @@ class ApiService {
       console.error('❌ Failed to get booking details:', error);
       throw error;
     }
-  }
-
-  async cancelBooking(bookingId) {
-    try {
-      const result = await this.request(`/booking/${bookingId}/cancel`, {
-        method: 'PATCH'
-      });
-      return result.data || result;
-    } catch (error) {
-      console.error('❌ Failed to cancel booking:', error);
-      throw error;
-    }
-  }
+  },
 
   async confirmPayment(paymentData) {
     const result = await this.request('/booking/confirm-payment', {
@@ -277,7 +265,7 @@ class ApiService {
       body: paymentData,
     });
     return result.data || result;
-  }
+  },
 
   async getCancellationDetails(bookingId) {
     const result = await this.request(`/cancellation/${bookingId}`);
