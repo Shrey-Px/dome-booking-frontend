@@ -278,6 +278,18 @@ class ApiService {
     });
     return result.data || result;
   }
+
+  async getCancellationDetails(bookingId) {
+    const result = await this.request(`/cancellation/${bookingId}`);
+    return result.data || result;
+  },
+
+  async cancelBooking(bookingId) {
+    const result = await this.request(`/cancellation/${bookingId}/cancel`, {
+      method: 'POST'
+    });
+    return result.data || result;
+  }
 }
 
 export default new ApiService();

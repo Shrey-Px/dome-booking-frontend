@@ -1,6 +1,7 @@
 // src/components/CancellationModal.js
 import React, { useState, useEffect } from 'react';
 import { X, AlertTriangle, Calendar, Clock, MapPin } from 'lucide-react';
+import ApiService from '../services/api';
 
 const CancellationModal = ({ bookingId, isOpen, onClose, onSuccess }) => {
   const [booking, setBooking] = useState(null);
@@ -20,16 +21,10 @@ const CancellationModal = ({ bookingId, isOpen, onClose, onSuccess }) => {
       setLoading(true);
       setError(null);
       
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/cancellation/${bookingId}`);
-      const data = await response.json();
-      
-      if (data.success) {
-        setBooking(data.data.booking);
-        setCanCancel(data.data.canCancel);
-        setHoursUntilBooking(data.data.hoursUntilBooking);
-      } else {
-        setError(data.message);
-      }
+      const data = await ApiService.getCancellationDetails(bookingId);
+      setBooking(data.booking);
+      setCanCancel(data.canCancel);
+      setHoursUntilBooking(data.hoursUntilBooking);
     } catch (err) {
       setError('Failed to load booking details');
     } finally {
@@ -41,23 +36,11 @@ const CancellationModal = ({ bookingId, isOpen, onClose, onSuccess }) => {
     try {
       setLoading(true);
       setError(null);
-      
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/cancellation/${bookingId}/cancel`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        onSuccess('Booking cancelled successfully! A confirmation email has been sent.');
-      } else {
-        setError(data.message);
-      }
+
+      await ApiService.cancelBooking(bookingId);
+      onSuccess('Booking cancelled successfully! A confirmation email has been sent.');
     } catch (err) {
-      setError('Failed to cancel booking');
+      setError(err.message || 'Failed to cancel booking');
     } finally {
       setLoading(false);
     }
