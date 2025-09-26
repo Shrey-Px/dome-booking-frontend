@@ -168,17 +168,16 @@ const PaymentView = ({
 
   const finalizeBooking = async (paymentIntentId) => {
     try {
-      await ApiService.processPayment({
+      // Call confirmation directly to send email
+      await ApiService.confirmPayment({
         bookingId: bookingData.id,
-        paymentIntentId,
-        amount: paymentData.finalAmount,
-        currency: 'cad'
+        paymentIntentId: paymentIntentId
       });
-      // Sync booking with mobile app and vendor dashboard
+    
+      console.log('Payment confirmed and email sent');
     } catch (error) {
       console.error('Failed to confirm payment:', error);
-      // Payment succeeded but booking finalization failed
-      // This should be handled by webhook in production
+      // Don't fail the payment flow if email confirmation fails
     }
   };
 
