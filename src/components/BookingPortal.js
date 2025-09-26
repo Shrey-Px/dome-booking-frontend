@@ -122,6 +122,8 @@ const BookingPortal = () => {
   const handleBookingSubmit = async (formData) => {
     try {
       setLoading(true);
+      console.log('Booking payload facility ID:', facility.id);
+      console.log('Full facility object:', facility);
       console.log('Submitting booking form:', formData);
       
       // Calculate end time
