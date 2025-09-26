@@ -157,7 +157,7 @@ const BookingPortal = () => {
       
       setBookingData({ 
         ...formData, 
-        id: result.id || result.data?.id 
+        id: result.data?._id || result._id || result.id // Try multiple possible locations
       });
       
       console.log('Booking created, moving to payment');

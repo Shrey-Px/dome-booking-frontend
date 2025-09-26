@@ -270,6 +270,14 @@ class ApiService {
       throw error;
     }
   }
+
+  async confirmPayment(paymentData) {
+    const result = await this.request('/booking/confirm-payment', {
+      method: 'POST',
+      body: paymentData,
+    });
+    return result.data || result;
+  }
 }
 
 export default new ApiService();

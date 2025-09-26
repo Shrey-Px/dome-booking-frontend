@@ -174,11 +174,9 @@ const PaymentView = ({
         amount: paymentData.finalAmount,
         currency: 'cad'
       });
-
       // Sync booking with mobile app and vendor dashboard
-      await ApiService.syncBooking(bookingData.id);
     } catch (error) {
-      console.error('Failed to finalize booking:', error);
+      console.error('Failed to confirm payment:', error);
       // Payment succeeded but booking finalization failed
       // This should be handled by webhook in production
     }
