@@ -54,12 +54,21 @@ const CancellationModal = ({ bookingId, isOpen, onClose, onSuccess, onRefreshAva
 
   const formatBookingDate = (dateValue) => {
     try {
-      const date = new Date(dateValue);
+      let date;
+      if (typeof dateValue === 'string' && dateValue.includes('-')) {
+        // Parse date string like "2025-10-04" in local timezone
+        const [year, month, day] = dateValue.split('-').map(Number);
+        date = new Date(year, month - 1, day);
+      } else {
+        date = new Date(dateValue);
+      }
+      
       return date.toLocaleDateString('en-US', { 
         weekday: 'long', 
         year: 'numeric', 
         month: 'long', 
-        day: 'numeric' 
+        day: 'numeric',
+        timeZone: 'America/Toronto' // Your local timezone
       });
     } catch (error) {
       console.error('Date formatting error:', error);
@@ -67,17 +76,32 @@ const CancellationModal = ({ bookingId, isOpen, onClose, onSuccess, onRefreshAva
     }
   };
 
-  const formatBookingTime = (timeValue) => {
+  const formatBookingTime = (timeValue, dateValue = null) => {
     try {
-      if (timeValue instanceof Date || typeof timeValue === 'string') {
-        const date = new Date(timeValue);
-        return date.toLocaleTimeString('en-US', { 
-          hour: '2-digit', 
-          minute: '2-digit',
-          hour12: true
-        });
+      let date;
+      
+      if (timeValue instanceof Date) {
+        date = new Date(timeValue);
+      } else if (typeof timeValue === 'string' && timeValue.includes(':')) {
+        // Parse time string like "10:00" and combine with date
+        const [hours, minutes] = timeValue.split(':').map(Number);
+        if (dateValue && typeof dateValue === 'string') {
+          const [year, month, day] = dateValue.split('-').map(Number);
+          date = new Date(year, month - 1, day, hours, minutes);
+        } else {
+          date = new Date();
+          date.setHours(hours, minutes, 0, 0);
+        }
+      } else {
+        date = new Date(timeValue);
       }
-      return timeValue;
+      
+      return date.toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: true,
+        timeZone: 'America/Toronto' // Your local timezone
+      });
     } catch (error) {
       console.error('Time formatting error:', error);
       return 'Invalid time';
@@ -135,7 +159,7 @@ const CancellationModal = ({ bookingId, isOpen, onClose, onSuccess, onRefreshAva
                   <div className="flex items-center text-gray-600">
                     <Clock size={16} className="mr-2" />
                     <span>
-                      {formatBookingTime(booking.startTime)} - {formatBookingTime(booking.endTime)}
+                      {formatBookingTime(booking.startTime, booking.bookingDate)} - {formatBookingTime(booking.endTime, booking.bookingDate)}
                     </span>
                   </div>
                 </div>
