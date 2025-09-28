@@ -116,6 +116,27 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
     };
   }, [showDatePicker]);
 
+  useEffect(() => {
+    // Listen for booking cancellations and refresh availability
+    const handleBookingCancelled = (event) => {
+      console.log('Booking cancelled, refreshing availability...', event.detail);
+      loadAvailability(); // This calls your existing loadAvailability function
+    };
+
+    const handleRefreshAvailability = () => {
+      console.log('Manual refresh requested, refreshing availability...');
+      loadAvailability();
+    };
+
+    window.addEventListener('bookingCancelled', handleBookingCancelled);
+    window.addEventListener('refreshAvailability', handleRefreshAvailability);
+
+    return () => {
+      window.removeEventListener('bookingCancelled', handleBookingCancelled);
+      window.removeEventListener('refreshAvailability', handleRefreshAvailability);
+    };
+  }, [selectedDate]); // Include selectedDate dependency to ensure it refreshes for current date
+
   // Helper function to check if a time slot is in the past
   const isTimeSlotInPast = (timeSlot) => {
     const now = new Date();

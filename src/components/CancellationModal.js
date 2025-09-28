@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { X, AlertTriangle, Calendar, Clock, MapPin } from 'lucide-react';
 import ApiService from '../services/api';
 
-const CancellationModal = ({ bookingId, isOpen, onClose, onSuccess }) => {
+const CancellationModal = ({ bookingId, isOpen, onClose, onSuccess, onRefreshAvailability }) => {
   const [booking, setBooking] = useState(null);
   const [canCancel, setCanCancel] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -38,11 +38,49 @@ const CancellationModal = ({ bookingId, isOpen, onClose, onSuccess }) => {
       setError(null);
 
       await ApiService.cancelBooking(bookingId);
+      
+      // Call the refresh callback if provided
+      if (onRefreshAvailability) {
+        onRefreshAvailability();
+      }
+      
       onSuccess('Booking cancelled successfully! A confirmation email has been sent.');
     } catch (err) {
       setError(err.message || 'Failed to cancel booking');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const formatBookingDate = (dateValue) => {
+    try {
+      const date = new Date(dateValue);
+      return date.toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+    } catch (error) {
+      console.error('Date formatting error:', error);
+      return 'Invalid date';
+    }
+  };
+
+  const formatBookingTime = (timeValue) => {
+    try {
+      if (timeValue instanceof Date || typeof timeValue === 'string') {
+        const date = new Date(timeValue);
+        return date.toLocaleTimeString('en-US', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: true
+        });
+      }
+      return timeValue;
+    } catch (error) {
+      console.error('Time formatting error:', error);
+      return 'Invalid time';
     }
   };
 
@@ -86,29 +124,18 @@ const CancellationModal = ({ bookingId, isOpen, onClose, onSuccess }) => {
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center text-gray-600">
                     <MapPin size={16} className="mr-2" />
-                    <span>{booking.fieldName} - Vision Badminton Centre</span>
+                    <span>{booking.fieldName || `Court ${booking.courtNumber}`} - Vision Badminton Centre</span>
                   </div>
                   
                   <div className="flex items-center text-gray-600">
                     <Calendar size={16} className="mr-2" />
-                    <span>{new Date(booking.bookingDate).toLocaleDateString('en-US', { 
-                      weekday: 'long', 
-                      year: 'numeric', 
-                      month: 'long', 
-                      day: 'numeric' 
-                    })}</span>
+                    <span>{formatBookingDate(booking.bookingDate || booking.startTime)}</span>
                   </div>
                   
                   <div className="flex items-center text-gray-600">
                     <Clock size={16} className="mr-2" />
                     <span>
-                      {new Date(booking.startTime).toLocaleTimeString('en-US', { 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
-                      })} - {new Date(booking.endTime).toLocaleTimeString('en-US', { 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
-                      })}
+                      {formatBookingTime(booking.startTime)} - {formatBookingTime(booking.endTime)}
                     </span>
                   </div>
                 </div>

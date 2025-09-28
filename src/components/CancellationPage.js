@@ -22,12 +22,22 @@ const CancellationPage = () => {
   const handleSuccess = (message) => {
     setSuccessMessage(message);
     setShowModal(false);
+    
+    // Trigger a custom event that calendar components can listen to
+    window.dispatchEvent(new CustomEvent('bookingCancelled', {
+      detail: { bookingId, message }
+    }));
   };
 
   const handleClose = () => {
     setShowModal(false);
     // Optionally redirect to home page
     window.location.href = '/';
+  };
+
+  const handleRefreshAvailability = () => {
+    // Dispatch custom event for calendar refresh
+    window.dispatchEvent(new CustomEvent('refreshAvailability'));
   };
 
   return (
@@ -57,6 +67,7 @@ const CancellationPage = () => {
           isOpen={showModal}
           onClose={handleClose}
           onSuccess={handleSuccess}
+          onRefreshAvailability={handleRefreshAvailability}
         />
       </div>
     </div>

@@ -115,6 +115,27 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
     };
   }, [showDatePicker]);
 
+  useEffect(() => {
+    // Listen for booking cancellations and refresh availability
+    const handleBookingCancelled = (event) => {
+      console.log('Booking cancelled, refreshing availability...', event.detail);
+      loadAvailability(); // This calls your existing loadAvailability function
+    };
+
+    const handleRefreshAvailability = () => {
+      console.log('Manual refresh requested, refreshing availability...');
+      loadAvailability();
+    };
+
+    window.addEventListener('bookingCancelled', handleBookingCancelled);
+    window.addEventListener('refreshAvailability', handleRefreshAvailability);
+
+    return () => {
+      window.removeEventListener('bookingCancelled', handleBookingCancelled);
+      window.removeEventListener('refreshAvailability', handleRefreshAvailability);
+    };
+  }, [selectedDate]); // Include selectedDate dependency to ensure it refreshes for current date
+
   const isTimeSlotInPast = (timeSlot) => {
     const now = new Date();
     const selectedDateOnly = new Date(selectedDate);
