@@ -5,6 +5,7 @@ import ApiService from '../services/api';
 
 const BookingForm = ({
   facility,
+  facilitySlug
   selectedDate,
   selectedSlot,
   selectedCourt,
@@ -69,6 +70,9 @@ const BookingForm = ({
     return Object.keys(newErrors).length === 0;
   };
 
+  const [discountApplied, setDiscountApplied] = useState(false);
+  const [applyingDiscount, setApplyingDiscount] = useState(false);
+
   const handleApplyDiscount = async () => {
     if (!formData.discountCode || !formData.discountCode.trim()) {
       setErrors(prev => ({ ...prev, discount: 'Please enter a discount code' }));
@@ -79,7 +83,6 @@ const BookingForm = ({
       setApplyingDiscount(true);
       setErrors(prev => ({ ...prev, discount: '' }));
 
-      const facilitySlug = 'vision-badminton'; // Add this line
       const result = await ApiService.applyDiscount(
         facilitySlug,
         formData.discountCode,
@@ -90,7 +93,6 @@ const BookingForm = ({
         const discount = result.data;
         const discountAmount = discount.discountAmount;
       
-        // Recalculate pricing with discount
         const courtRental = paymentData.courtRental;
         const serviceFee = paymentData.serviceFee;
         const subtotal = courtRental + serviceFee - discountAmount;

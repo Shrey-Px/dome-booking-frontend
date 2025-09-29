@@ -6,6 +6,7 @@ import ApiService from '../services/api';
 
 const PaymentView = ({
   facility,
+  facilitySlug,
   selectedDate,
   selectedSlot,
   selectedCourt,
@@ -119,12 +120,10 @@ const PaymentView = ({
     }
 
     const card = elements.getElement(CardElement);
-
     if (card == null) {
       return;
     }
 
-    // Validate billing details
     const billingErrors = validateBillingDetails();
     if (Object.keys(billingErrors).length > 0) {
       setErrors(prev => ({ ...prev, ...billingErrors }));
@@ -135,7 +134,6 @@ const PaymentView = ({
     setErrors(prev => ({ ...prev, payment: '', postal_code: '' }));
 
     try {
-      // Confirm payment with Stripe
       const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
         payment_method: {
           card: card,
@@ -154,9 +152,56 @@ const PaymentView = ({
       if (error) {
         setErrors(prev => ({ ...prev, payment: error.message }));
       } else if (paymentIntent.status === 'succeeded') {
-        // Payment successful, finalize booking
-        await finalizeBooking(paymentIntent.id);
-        onSuccess();
+        // CRITICAL: Create booking AFTER payment succeeds
+        console.log('Payment succeeded, creating booking...');
+      
+        // Calculate end time
+        const duration = 60;
+        const startTime24 = selectedSlot.time24;
+        const [startHour, startMin] = startTime24.split(':').map(Number);
+        const totalMinutes = startHour * 60 + startMin + duration;
+        const endHour = Math.floor(totalMinutes / 60);
+        const endMin = totalMinutes % 60;
+        const endTime24 = `${endHour.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`;
+      
+        const bookingPayload = {
+          facilityId: facility.venueId.toString(),
+          courtNumber: selectedCourt.id,
+          bookingDate: selectedDate.toISOString().split('T')[0],
+          startTime: startTime24,
+          endTime: endTime24,
+          duration: duration,
+          totalAmount: paymentData.finalAmount,
+          discountCode: bookingData.discountCode || null,
+          discountAmount: paymentData.discountAmount || 0,
+          source: 'web',
+          customerName: bookingData.customerName,
+          customerEmail: bookingData.customerEmail,
+          customerPhone: bookingData.customerPhone,
+          userId: bookingData.userId || null
+        };
+
+        console.log('Creating booking with payload:', bookingPayload);
+
+        try {
+          const bookingResult = await ApiService.createBooking(facilitySlug, bookingPayload);
+          const bookingId = bookingResult.data?._id || bookingResult._id || bookingResult.id;
+        
+          console.log('Booking created successfully:', bookingId);
+        
+          // Confirm payment and send email
+          await ApiService.confirmPayment({
+            bookingId: bookingId,
+            paymentIntentId: paymentIntent.id
+          });
+        
+          console.log('Payment confirmed and email sent');
+        
+          onSuccess();
+        } catch (bookingError) {
+          console.error('Failed to create booking after payment:', bookingError);
+          setErrors(prev => ({ ...prev, payment: 'Payment succeeded but booking creation failed. Please contact support with payment ID: ' + paymentIntent.id }));
+        }
       }
     } catch (error) {
       console.error('Payment failed:', error);
