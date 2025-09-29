@@ -5,7 +5,7 @@ import ApiService from '../services/api';
 
 const BookingForm = ({
   facility,
-  facilitySlug
+  facilitySlug,
   selectedDate,
   selectedSlot,
   selectedCourt,
