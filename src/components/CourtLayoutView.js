@@ -1,6 +1,7 @@
 // CourtLayoutView.js - Mobile Optimized Version
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, ChevronDown, Calendar, Clock, User, RefreshCw, X, List, Grid } from 'lucide-react';
+import ApiService from '../services/api';
 
 const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewMode = 'layout', onViewModeChange }) => {
   const [availability, setAvailability] = useState({});
@@ -13,10 +14,6 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  
-  // FIXED: Use the correct facility UUID and API endpoint
-  const FACILITY_UUID = '68cad6b20a06da55dfb88af5';
-  const API_BASE_URL = process.env.REACT_APP_API_URL?.replace('/api/v1', '') || 'https://dome-booking-backend-production.up.railway.app';
   
   // Mobile detection
   useEffect(() => {
@@ -170,34 +167,21 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
   const loadAvailability = async () => {
     setLoading(true);
     setError(null);
-    
+  
     try {
       const dateStr = selectedDate.toISOString().split('T')[0];
-      const timestamp = new Date().getTime();
-      const url = `${API_BASE_URL}/api/v1/availability?facility_id=${FACILITY_UUID}&date=${dateStr}&_t=${timestamp}`;
-      
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`API Error: ${response.status} - ${errorText}`);
-      }
-      
-      const data = await response.json();
-      
-      if (data.success && data.data && data.data.availability) {
-        setAvailability(data.data.availability);
+    
+      // Use ApiService with facility slug
+      const facilitySlug = 'vision-badminton';
+      const data = await ApiService.getAvailability(facilitySlug, dateStr);
+    
+      if (data && data.availability) {
+        setAvailability(data.availability);
         setLastRefresh(new Date());
       } else {
         throw new Error('Invalid API response format');
       }
-      
+    
     } catch (error) {
       console.error('Failed to load availability:', error);
       setError(error.message);
