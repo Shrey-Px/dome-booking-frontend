@@ -1,12 +1,14 @@
-// src/services/api.js - CORRECTED VERSION
+// src/services/api.js - Updated with multi-tenant support
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://dome-booking-backend-production.up.railway.app/api/v1';
-
-// FORCE the correct UUID
-const FACILITY_UUID = '68cad6b20a06da55dfb88af5';
 
 class ApiService {
   constructor() {
     this.baseURL = API_BASE_URL;
+    this.currentFacility = null;
+  }
+
+  setFacility(facilitySlug) {
+    this.currentFacility = facilitySlug;
   }
 
   async request(endpoint, options = {}) {
@@ -23,6 +25,11 @@ class ApiService {
       },
       ...options,
     };
+
+    // Add facility slug to headers if available
+    if (this.currentFacility) {
+      config.headers['x-facility-slug'] = this.currentFacility;
+    }
     
     if (config.body && typeof config.body === 'object') {
       config.body = JSON.stringify(config.body);
@@ -70,6 +77,17 @@ class ApiService {
     }
   }
 
+  // Facility Management
+  async getFacilities() {
+    const result = await this.request('/facilities');
+    return result.data || result;
+  }
+
+  async getFacility(slug) {
+    const result = await this.request(`/facilities/${slug}`);
+    return result.data || result;
+  }
+
   // Time conversion utilities
   convertTo12Hour(time24) {
     try {
@@ -100,15 +118,11 @@ class ApiService {
     }
   }
 
-  // FIXED: Always use UUID, ignore any passed facilityId
-  async getAvailability(ignoredFacilityId, date) {
+  // Availability - Updated to use facility from context
+  async getAvailability(facilitySlug, date) {
     try {
       console.log('Getting availability...');
-      console.log('FORCING UUID instead of:', ignoredFacilityId);
-      console.log('Using UUID:', FACILITY_UUID);
-      
-      // Always use the UUID, regardless of what's passed
-      const facilityId = FACILITY_UUID;
+      console.log('Facility slug:', facilitySlug);
       
       // Ensure date is in YYYY-MM-DD format
       let dateStr;
@@ -126,7 +140,7 @@ class ApiService {
       console.log('Formatted date string:', dateStr);
       
       const timestamp = new Date().getTime();
-      const url = `/availability?facility_id=${facilityId}&date=${dateStr}&_t=${timestamp}`;
+      const url = `/availability?facility=${facilitySlug}&date=${dateStr}&_t=${timestamp}`;
       
       console.log('Final URL:', this.baseURL + url);
       
@@ -142,14 +156,13 @@ class ApiService {
   }
 
   // Transform backend availability to frontend format
-  async getBookings(date) {
+  async getBookings(facilitySlug, date) {
     const dateString = typeof date === 'string' ? date : date.toISOString().split('T')[0];
 
     try {
-      console.log('Loading bookings for date:', dateString);
+      console.log('Loading bookings for facility:', facilitySlug, 'date:', dateString);
       
-      // Pass anything as first param, function will use UUID anyway
-      const result = await this.getAvailability('ignored', dateString);
+      const result = await this.getAvailability(facilitySlug, dateString);
       
       if (!result || !result.availability) {
         console.log('No availability data found');
@@ -191,12 +204,14 @@ class ApiService {
     }
   }
 
-  // FIXED: Always use UUID for facility ID in booking creation
-  async createBooking(bookingData) {
+  // Booking - Updated to include facility slug
+  async createBooking(facilitySlug, bookingData) {
     console.log('Creating booking with data:', bookingData);
+    console.log('Facility slug:', facilitySlug);
     
     const backendBookingData = {
-      facilityId: FACILITY_UUID, // FORCE UUID
+      facilitySlug: facilitySlug, // Add facility slug
+      facilityId: bookingData.facilityId,
       customerName: bookingData.customerName,
       customerEmail: bookingData.customerEmail,
       customerPhone: bookingData.customerPhone || '555-0123',
@@ -212,7 +227,7 @@ class ApiService {
       source: 'web'
     };
     
-    console.log('Backend booking payload (FORCED UUID):', backendBookingData);
+    console.log('Backend booking payload:', backendBookingData);
     
     const result = await this.request('/booking/create-booking', {
       method: 'POST',
@@ -223,11 +238,11 @@ class ApiService {
     return result.data || result;
   }
 
-  async applyDiscount(discountCode, amount) {
-    console.log('Applying discount:', { discountCode, amount });
+  async applyDiscount(facilitySlug, discountCode, amount) {
+    console.log('Applying discount:', { facilitySlug, discountCode, amount });
     const result = await this.request('/discount/apply-discount', {
       method: 'POST',
-      body: { code: discountCode, amount },
+      body: { code: discountCode, amount, facilitySlug },
     });
     console.log('Discount result:', result);
     return result;

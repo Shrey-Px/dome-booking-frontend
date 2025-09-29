@@ -1,1 +1,4 @@
+# Netlify Redirects for Multi-Tenant Architecture
+
+# SPA routing - must be at the end
 /*    /index.html   200

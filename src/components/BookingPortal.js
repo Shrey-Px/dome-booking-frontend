@@ -1,6 +1,6 @@
-// src/components/BookingPortal.js - Complete version with integrated view toggle
+// src/components/BookingPortal.js - Updated with multi-tenant support
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useFacility } from './FacilityLoader';
 import CalendarView from './CalendarView';
 import CourtLayoutView from './CourtLayoutView';
 import BookingForm from './BookingForm';
@@ -13,13 +13,14 @@ import { Elements } from '@stripe/react-stripe-js';
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 
 const BookingPortal = () => {
-  const { facilitySlug } = useParams();
-  const [facility, setFacility] = useState(null);
+  // Get facility from context
+  const { facility, facilitySlug } = useFacility();
+  
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [selectedCourt, setSelectedCourt] = useState(null);
   const [currentStep, setCurrentStep] = useState(1);
-  const [currentView, setCurrentView] = useState('calendar'); // 'calendar' or 'layout'
+  const [currentView, setCurrentView] = useState('calendar');
   const [bookingData, setBookingData] = useState({
     customerName: '',
     customerEmail: '',
@@ -40,44 +41,33 @@ const BookingPortal = () => {
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Load facility data on mount
+  // Set facility in API service when it changes
   useEffect(() => {
-    loadFacility();
+    if (facilitySlug) {
+      ApiService.setFacility(facilitySlug);
+    }
   }, [facilitySlug]);
 
-  const loadFacility = async () => {
-    try {
-      setLoading(true);
-      // FIXED: Use the correct UUID that matches your backend and update to 10 courts
-      setFacility({
-        id: '68cad6b20a06da55dfb88af5',
-        name: 'Vision Badminton Centre',
-        slug: 'dome-sports',
-        courts: [
-          { id: 1, name: 'Court 1', sport: 'Badminton' },
-          { id: 2, name: 'Court 2', sport: 'Badminton' },
-          { id: 3, name: 'Court 3', sport: 'Badminton' },
-          { id: 4, name: 'Court 4', sport: 'Badminton' },
-          { id: 5, name: 'Court 5', sport: 'Badminton' },
-          { id: 6, name: 'Court 6', sport: 'Badminton' },
-          { id: 7, name: 'Court 7', sport: 'Badminton' },
-          { id: 8, name: 'Court 8', sport: 'Badminton' },
-          { id: 9, name: 'Court 9', sport: 'Badminton' },
-          { id: 10, name: 'Court 10', sport: 'Badminton' }
-        ],
-        pricePerHour: 25.00,
-        businessHours: {
-          weekday: { start: '08:00', end: '20:00' },
-          weekend: { start: '06:00', end: '22:00' }
-        }
+  // Update pricing when facility loads
+  useEffect(() => {
+    if (facility) {
+      const courtRental = facility.pricing.courtRental;
+      const serviceFee = courtRental * (facility.pricing.serviceFeePercentage / 100);
+      const subtotal = courtRental + serviceFee;
+      const tax = subtotal * (facility.pricing.taxPercentage / 100);
+      const finalTotal = subtotal + tax;
+      
+      setPaymentData({
+        courtRental: parseFloat(courtRental.toFixed(2)),
+        serviceFee: parseFloat(serviceFee.toFixed(2)),
+        discountAmount: 0,
+        subtotal: parseFloat(subtotal.toFixed(2)),
+        tax: parseFloat(tax.toFixed(2)),
+        totalAmount: parseFloat(finalTotal.toFixed(2)),
+        finalAmount: parseFloat(finalTotal.toFixed(2))
       });
-    } catch (error) {
-      console.error('Failed to load facility:', error);
-      setErrors(prev => ({ ...prev, facility: 'Failed to load facility information' }));
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [facility]);
 
   const handleSlotSelect = (slotData) => {
     console.log('Slot selected in portal:', slotData);
@@ -87,16 +77,16 @@ const BookingPortal = () => {
       time: slotData.time,
       time24: slotData.time24,
       displayTime: slotData.displayTime,
-      duration: 60 // Default 1 hour
+      duration: 60
     });
     setSelectedDate(slotData.date);
     
-    // Calculate pricing with NEW structure
-    const courtRental = 25.00; // Updated base price
-    const serviceFee = courtRental * 0.01; // 1% service fee = $0.25
-    const subtotal = courtRental + serviceFee; // $25.25 (before discount)
-    const tax = subtotal * 0.13; // 13% tax = $3.28
-    const finalTotal = subtotal + tax; // $28.53
+    // Calculate pricing with facility-specific rates
+    const courtRental = facility.pricing.courtRental;
+    const serviceFee = courtRental * (facility.pricing.serviceFeePercentage / 100);
+    const subtotal = courtRental + serviceFee;
+    const tax = subtotal * (facility.pricing.taxPercentage / 100);
+    const finalTotal = subtotal + tax;
     
     setPaymentData({
       courtRental: parseFloat(courtRental.toFixed(2)),
@@ -104,11 +94,12 @@ const BookingPortal = () => {
       discountAmount: 0,
       subtotal: parseFloat(subtotal.toFixed(2)),
       tax: parseFloat(tax.toFixed(2)),
-      totalAmount: parseFloat(finalTotal.toFixed(2)), // This will be the base for Stripe
+      totalAmount: parseFloat(finalTotal.toFixed(2)),
       finalAmount: parseFloat(finalTotal.toFixed(2))
     });
 
-    console.log('Initial pricing calculated:', {
+    console.log('Pricing calculated for facility:', {
+      facilityName: facility.name,
       courtRental,
       serviceFee,
       subtotal,
@@ -122,9 +113,8 @@ const BookingPortal = () => {
   const handleBookingSubmit = async (formData) => {
     try {
       setLoading(true);
-      console.log('Booking payload facility ID:', facility.id);
-      console.log('Full facility object:', facility);
-      console.log('Submitting booking form:', formData);
+      console.log('Submitting booking for facility:', facility.name);
+      console.log('Facility slug:', facilitySlug);
       
       // Calculate end time
       const duration = formData.duration || 60;
@@ -136,7 +126,7 @@ const BookingPortal = () => {
       const endTime24 = `${endHour.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`;
       
       const bookingPayload = {
-        facilityId: facility.id,
+        facilityId: facility.venueId.toString(),
         courtNumber: selectedCourt.id,
         bookingDate: selectedDate.toISOString().split('T')[0],
         startTime: startTime24,
@@ -153,11 +143,11 @@ const BookingPortal = () => {
       };
 
       console.log('Sending booking payload:', bookingPayload);
-      const result = await ApiService.createBooking(bookingPayload);
+      const result = await ApiService.createBooking(facilitySlug, bookingPayload);
       
       setBookingData({ 
         ...formData, 
-        id: result.data?._id || result._id || result.id // Try multiple possible locations
+        id: result.data?._id || result._id || result.id
       });
       
       console.log('Booking created, moving to payment');
@@ -186,11 +176,24 @@ const BookingPortal = () => {
       userId: '',
       discountCode: ''
     });
+    
+    // Reset pricing to facility defaults
+    const courtRental = facility.pricing.courtRental;
+    const serviceFee = courtRental * (facility.pricing.serviceFeePercentage / 100);
+    const subtotal = courtRental + serviceFee;
+    const tax = subtotal * (facility.pricing.taxPercentage / 100);
+    const finalTotal = subtotal + tax;
+    
     setPaymentData({
-      totalAmount: 25.00,
+      courtRental: parseFloat(courtRental.toFixed(2)),
+      serviceFee: parseFloat(serviceFee.toFixed(2)),
       discountAmount: 0,
-      finalAmount: 25.00
+      subtotal: parseFloat(subtotal.toFixed(2)),
+      tax: parseFloat(tax.toFixed(2)),
+      totalAmount: parseFloat(finalTotal.toFixed(2)),
+      finalAmount: parseFloat(finalTotal.toFixed(2))
     });
+    
     setSuccess(false);
     setErrors({});
   };
@@ -198,17 +201,6 @@ const BookingPortal = () => {
   const handleViewChange = (view) => {
     setCurrentView(view);
   };
-
-  if (!facility) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading facility information...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <Elements stripe={stripePromise}>
@@ -228,7 +220,8 @@ const BookingPortal = () => {
             <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
               <p className="text-sm text-yellow-800">
                 <strong>Debug:</strong> Step {currentStep}, 
-                Facility ID: {facility.id}, 
+                Facility: {facility.name} ({facilitySlug}), 
+                Venue ID: {facility.venueId}, 
                 Selected: {selectedCourt?.name || 'none'} at {selectedSlot?.time || 'none'}
                 {selectedSlot && ` (${selectedSlot.time24})`}
                 | View: {currentView}
@@ -245,6 +238,8 @@ const BookingPortal = () => {
         {/* Step 1: Calendar/Layout View Selection */}
         {currentStep === 1 && currentView === 'calendar' && (
           <CalendarView 
+            facility={facility}
+            facilitySlug={facilitySlug}
             onBookingSelect={handleSlotSelect}
             viewMode={currentView}
             onViewModeChange={handleViewChange}
@@ -255,6 +250,8 @@ const BookingPortal = () => {
 
         {currentStep === 1 && currentView === 'layout' && (
           <CourtLayoutView 
+            facility={facility}
+            facilitySlug={facilitySlug}
             onBookingSelect={handleSlotSelect}
             selectedDate={selectedDate}
             setSelectedDate={setSelectedDate}
