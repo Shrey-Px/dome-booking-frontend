@@ -70,38 +70,47 @@ const BookingForm = ({
   };
 
   const handleApplyDiscount = async () => {
-    if (!formData.discountCode.trim()) return;
-    
-    setDiscountLoading(true);
-    setErrors(prev => ({ ...prev, discountCode: '' }));
-    
+    if (!formData.discountCode || !formData.discountCode.trim()) {
+      setErrors(prev => ({ ...prev, discount: 'Please enter a discount code' }));
+      return;
+    }
+
     try {
-      const courtRental = 25.00;
+      setApplyingDiscount(true);
+      setErrors(prev => ({ ...prev, discount: '' }));
+
       const facilitySlug = 'vision-badminton'; // Add this line
-      const result = await ApiService.applyDiscount(facilitySlug, discountCode, paymentData.totalAmount);
+      const result = await ApiService.applyDiscount(
+        facilitySlug,
+        formData.discountCode,
+        paymentData.courtRental
+      );
+
+      if (result.success && result.data) {
+        const discount = result.data;
+        const discountAmount = discount.discountAmount;
       
-      if (result.valid) {
-        const discountAmount = result.discountAmount;
-        const newPricing = calculatePricing(courtRental, discountAmount);
-        
-        setPaymentData(prev => ({
-          ...prev,
-          courtRental: newPricing.courtRental,
-          serviceFee: newPricing.serviceFee,
-          discountAmount: newPricing.discountAmount,
-          subtotal: newPricing.subtotal,
-          tax: newPricing.tax,
-          totalAmount: newPricing.finalTotal, // This will be the final total
-          finalAmount: newPricing.finalTotal
-        }));
+        // Recalculate pricing with discount
+        const courtRental = paymentData.courtRental;
+        const serviceFee = paymentData.serviceFee;
+        const subtotal = courtRental + serviceFee - discountAmount;
+        const tax = subtotal * 0.13;
+        const finalTotal = subtotal + tax;
+
+        setPaymentData({
+          ...paymentData,
+          discountAmount: discountAmount,
+          subtotal: parseFloat(subtotal.toFixed(2)),
+          tax: parseFloat(tax.toFixed(2)),
+          finalAmount: parseFloat(finalTotal.toFixed(2))
+        });
+
         setDiscountApplied(true);
-      } else {
-        setErrors(prev => ({ ...prev, discountCode: result.message || 'Invalid discount code' }));
       }
     } catch (error) {
-      setErrors(prev => ({ ...prev, discountCode: error.message || 'Failed to apply discount code' }));
+      setErrors(prev => ({ ...prev, discount: error.message || 'Invalid discount code' }));
     } finally {
-      setDiscountLoading(false);
+      setApplyingDiscount(false);
     }
   };
 

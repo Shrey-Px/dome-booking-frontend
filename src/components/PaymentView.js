@@ -177,7 +177,9 @@ const PaymentView = ({
       const endMin = totalMinutes % 60;
       const endTime24 = `${endHour.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`;
     
-      // CREATE booking now (after payment success)
+      console.log('Creating booking after successful payment...');
+    
+      // CREATE BOOKING NOW (after payment success)
       const bookingPayload = {
         facilityId: facility.venueId.toString(),
         courtNumber: selectedCourt.id,
@@ -186,28 +188,32 @@ const PaymentView = ({
         endTime: endTime24,
         duration: duration,
         totalAmount: paymentData.finalAmount,
-        discountCode: bookingData.discountCode,
-        discountAmount: paymentData.discountAmount,
+        discountCode: bookingData.discountCode || null,
+        discountAmount: paymentData.discountAmount || 0,
         source: 'web',
         customerName: bookingData.customerName,
         customerEmail: bookingData.customerEmail,
         customerPhone: bookingData.customerPhone,
-        userId: bookingData.userId
+        userId: bookingData.userId || null
       };
+
+      console.log('Booking payload:', bookingPayload);
 
       const result = await ApiService.createBooking(facilitySlug, bookingPayload);
       const bookingId = result.data?._id || result._id || result.id;
-
-      // Call confirmation directly to send email
+    
+      console.log('Booking created with ID:', bookingId);
+    
+      // Now confirm payment and send email
       await ApiService.confirmPayment({
-        bookingId: bookingData.id,
+        bookingId: bookingId,
         paymentIntentId: paymentIntentId
       });
-    
+     
       console.log('Payment confirmed and email sent');
     } catch (error) {
-      console.error('Failed to confirm payment:', error);
-      // Don't fail the payment flow if email confirmation fails
+      console.error('Failed to finalize booking:', error);
+      // Don't fail the payment flow if this fails
     }
   };
 
