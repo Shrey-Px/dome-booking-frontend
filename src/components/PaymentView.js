@@ -168,6 +168,36 @@ const PaymentView = ({
 
   const finalizeBooking = async (paymentIntentId) => {
     try {
+      // Calculate end time
+      const duration = 60;
+      const startTime24 = selectedSlot.time24;
+      const [startHour, startMin] = startTime24.split(':').map(Number);
+      const totalMinutes = startHour * 60 + startMin + duration;
+      const endHour = Math.floor(totalMinutes / 60);
+      const endMin = totalMinutes % 60;
+      const endTime24 = `${endHour.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`;
+    
+      // CREATE booking now (after payment success)
+      const bookingPayload = {
+        facilityId: facility.venueId.toString(),
+        courtNumber: selectedCourt.id,
+        bookingDate: selectedDate.toISOString().split('T')[0],
+        startTime: startTime24,
+        endTime: endTime24,
+        duration: duration,
+        totalAmount: paymentData.finalAmount,
+        discountCode: bookingData.discountCode,
+        discountAmount: paymentData.discountAmount,
+        source: 'web',
+        customerName: bookingData.customerName,
+        customerEmail: bookingData.customerEmail,
+        customerPhone: bookingData.customerPhone,
+        userId: bookingData.userId
+      };
+
+      const result = await ApiService.createBooking(facilitySlug, bookingPayload);
+      const bookingId = result.data?._id || result._id || result.id;
+
       // Call confirmation directly to send email
       await ApiService.confirmPayment({
         bookingId: bookingData.id,

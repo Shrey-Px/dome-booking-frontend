@@ -1,4 +1,4 @@
-// src/components/BookingPortal.js - Updated with multi-tenant support
+// src/components/BookingPortal.js - Fixed booking creation timing
 import React, { useState, useEffect } from 'react';
 import { useFacility } from './FacilityLoader';
 import CalendarView from './CalendarView';
@@ -13,7 +13,6 @@ import { Elements } from '@stripe/react-stripe-js';
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 
 const BookingPortal = () => {
-  // Get facility from context
   const { facility, facilitySlug } = useFacility();
   
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -41,14 +40,12 @@ const BookingPortal = () => {
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Set facility in API service when it changes
   useEffect(() => {
     if (facilitySlug) {
       ApiService.setFacility(facilitySlug);
     }
   }, [facilitySlug]);
 
-  // Update pricing when facility loads
   useEffect(() => {
     if (facility) {
       const courtRental = facility.pricing.courtRental;
@@ -81,7 +78,6 @@ const BookingPortal = () => {
     });
     setSelectedDate(slotData.date);
     
-    // Calculate pricing with facility-specific rates
     const courtRental = facility.pricing.courtRental;
     const serviceFee = courtRental * (facility.pricing.serviceFeePercentage / 100);
     const subtotal = courtRental + serviceFee;
@@ -98,63 +94,21 @@ const BookingPortal = () => {
       finalAmount: parseFloat(finalTotal.toFixed(2))
     });
 
-    console.log('Pricing calculated for facility:', {
-      facilityName: facility.name,
-      courtRental,
-      serviceFee,
-      subtotal,
-      tax,
-      finalTotal
-    });
-
     setCurrentStep(2);
   };
 
+  // FIXED: Don't create booking here - just save form data
   const handleBookingSubmit = async (formData) => {
     try {
       setLoading(true);
-      console.log('Submitting booking for facility:', facility.name);
-      console.log('Facility slug:', facilitySlug);
+      console.log('Form data saved, moving to payment step');
       
-      // Calculate end time
-      const duration = formData.duration || 60;
-      const startTime24 = selectedSlot.time24;
-      const [startHour, startMin] = startTime24.split(':').map(Number);
-      const totalMinutes = startHour * 60 + startMin + duration;
-      const endHour = Math.floor(totalMinutes / 60);
-      const endMin = totalMinutes % 60;
-      const endTime24 = `${endHour.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`;
-      
-      const bookingPayload = {
-        facilityId: facility.venueId.toString(),
-        courtNumber: selectedCourt.id,
-        bookingDate: selectedDate.toISOString().split('T')[0],
-        startTime: startTime24,
-        endTime: endTime24,
-        duration: duration,
-        totalAmount: paymentData.finalAmount,
-        discountCode: formData.discountCode,
-        discountAmount: paymentData.discountAmount,
-        source: 'web',
-        customerName: formData.customerName,
-        customerEmail: formData.customerEmail,
-        customerPhone: formData.customerPhone,
-        userId: formData.userId
-      };
-
-      console.log('Sending booking payload:', bookingPayload);
-      const result = await ApiService.createBooking(facilitySlug, bookingPayload);
-      
-      setBookingData({ 
-        ...formData, 
-        id: result.data?._id || result._id || result.id
-      });
-      
-      console.log('Booking created, moving to payment');
+      // Just store the form data - booking will be created after payment
+      setBookingData(formData);
       setCurrentStep(3);
       
     } catch (error) {
-      console.error('Booking creation failed:', error);
+      console.error('Form submission failed:', error);
       setErrors(prev => ({ ...prev, submit: error.message }));
     } finally {
       setLoading(false);
@@ -177,7 +131,6 @@ const BookingPortal = () => {
       discountCode: ''
     });
     
-    // Reset pricing to facility defaults
     const courtRental = facility.pricing.courtRental;
     const serviceFee = courtRental * (facility.pricing.serviceFeePercentage / 100);
     const subtotal = courtRental + serviceFee;
@@ -205,7 +158,6 @@ const BookingPortal = () => {
   return (
     <Elements stripe={stripePromise}>
       <div className="min-h-screen bg-gray-50">
-        {/* Progress Indicator - Only show for steps 2 and 3 */}
         {currentStep > 1 && (
           <div className="py-8">
             <div className="max-w-6xl mx-auto px-4">
@@ -214,7 +166,6 @@ const BookingPortal = () => {
           </div>
         )}
         
-        {/* Debug info for development */}
         {process.env.NODE_ENV === 'development' && currentStep > 1 && (
           <div className="max-w-6xl mx-auto px-4 mb-4">
             <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -235,7 +186,6 @@ const BookingPortal = () => {
           </div>
         )}
         
-        {/* Step 1: Calendar/Layout View Selection */}
         {currentStep === 1 && currentView === 'calendar' && (
           <CalendarView 
             facility={facility}
@@ -260,12 +210,12 @@ const BookingPortal = () => {
           />
         )}
         
-        {/* Step 2: Booking Form */}
         {currentStep === 2 && (
           <div className="py-8">
             <div className="max-w-6xl mx-auto px-4">
               <BookingForm
                 facility={facility}
+                facilitySlug={facilitySlug}
                 selectedDate={selectedDate}
                 selectedSlot={selectedSlot}
                 selectedCourt={selectedCourt}
@@ -281,12 +231,12 @@ const BookingPortal = () => {
           </div>
         )}
         
-        {/* Step 3: Payment */}
         {currentStep === 3 && (
           <div className="py-8">
             <div className="max-w-6xl mx-auto px-4">
               <PaymentView
                 facility={facility}
+                facilitySlug={facilitySlug}
                 selectedDate={selectedDate}
                 selectedSlot={selectedSlot}
                 selectedCourt={selectedCourt}

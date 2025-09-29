@@ -77,7 +77,8 @@ const BookingForm = ({
     
     try {
       const courtRental = 25.00;
-      const result = await ApiService.applyDiscount(formData.discountCode, courtRental);
+      const facilitySlug = 'vision-badminton'; // Add this line
+      const result = await ApiService.applyDiscount(facilitySlug, discountCode, paymentData.totalAmount);
       
       if (result.valid) {
         const discountAmount = result.discountAmount;
