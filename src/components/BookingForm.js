@@ -70,7 +70,6 @@ const BookingForm = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const [discountApplied, setDiscountApplied] = useState(false);
   const [applyingDiscount, setApplyingDiscount] = useState(false);
 
   const handleApplyDiscount = async () => {
