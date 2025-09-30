@@ -26,6 +26,7 @@ const BookingForm = ({
   });
   const [discountLoading, setDiscountLoading] = useState(false);
   const [discountApplied, setDiscountApplied] = useState(false);
+  const [applyingDiscount, setApplyingDiscount] = useState(false);
 
   const formatDate = (date) => {
     return date.toLocaleDateString('en-US', {
@@ -70,8 +71,6 @@ const BookingForm = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const [applyingDiscount, setApplyingDiscount] = useState(false);
-
   const handleApplyDiscount = async () => {
     if (!formData.discountCode || !formData.discountCode.trim()) {
       setErrors(prev => ({ ...prev, discount: 'Please enter a discount code' }));
@@ -81,22 +80,35 @@ const BookingForm = ({
     try {
       setApplyingDiscount(true);
       setErrors(prev => ({ ...prev, discount: '' }));
-
+  
       const result = await ApiService.applyDiscount(
         facilitySlug,
         formData.discountCode,
         paymentData.courtRental
       );
 
-      if (result.success && result.data) {
-        const discount = result.data;
-        const discountAmount = discount.discountAmount;
+      console.log('Discount API response:', result);
+
+      // FIXED: Check both result.data and result directly
+      const discountData = result.data || result;
+    
+      if (result.success && discountData.discountAmount) {
+        const discountAmount = discountData.discountAmount;
       
         const courtRental = paymentData.courtRental;
         const serviceFee = paymentData.serviceFee;
         const subtotal = courtRental + serviceFee - discountAmount;
         const tax = subtotal * 0.13;
         const finalTotal = subtotal + tax;
+
+        console.log('Updated pricing:', {
+          courtRental,
+          serviceFee,
+          discountAmount,
+          subtotal: subtotal.toFixed(2),
+          tax: tax.toFixed(2),
+          finalTotal: finalTotal.toFixed(2)
+        });
 
         setPaymentData({
           ...paymentData,
@@ -107,9 +119,19 @@ const BookingForm = ({
         });
 
         setDiscountApplied(true);
+      
+        // Clear any previous errors
+        setErrors(prev => ({ ...prev, discount: '' }));
+      } else {
+        throw new Error('Invalid discount response');
       }
     } catch (error) {
-      setErrors(prev => ({ ...prev, discount: error.message || 'Invalid discount code' }));
+      console.error('Discount error:', error);
+      setErrors(prev => ({ 
+        ...prev, 
+        discount: error.message || 'Invalid discount code' 
+      }));
+      setDiscountApplied(false);
     } finally {
       setApplyingDiscount(false);
     }
