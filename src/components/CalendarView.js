@@ -1,11 +1,13 @@
-// CalendarView.js - Mobile Optimized Version
-// Save this file as CalendarView.js in your src/components folder
-
+// CalendarView.js - Complete Fixed Version with all functions
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, ChevronDown, Calendar, Clock, User, RefreshCw, List, Grid } from 'lucide-react';
+import { useFacility } from './FacilityLoader';
 import ApiService from '../services/api';
 
 const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange, selectedDate, setSelectedDate }) => {
+  // Get facility context instead of hardcoding
+  const { facility, facilitySlug } = useFacility();
+  
   const [availability, setAvailability] = useState({});
   const [loading, setLoading] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -16,19 +18,40 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [selectedMobileCourt, setSelectedMobileCourt] = useState(null);
   
-  // FIXED: 10 courts for Strings Badminton Academy with correct names
-  const courts = [
-    { id: 1, name: 'Court 1', sport: 'Badminton' },
-    { id: 2, name: 'Court 2', sport: 'Badminton' },
-    { id: 3, name: 'Court 3', sport: 'Badminton' },
-    { id: 4, name: 'Court 4', sport: 'Badminton' },
-    { id: 5, name: 'Court 5', sport: 'Badminton' },
-    { id: 6, name: 'Court 6', sport: 'Badminton' },
-    { id: 7, name: 'Court 7', sport: 'Badminton' },
-    { id: 8, name: 'Court 8', sport: 'Badminton' },
-    { id: 9, name: 'Court 9', sport: 'Badminton' },
-    { id: 10, name: 'Court 10', sport: 'Badminton' }
-  ];
+  // Get courts from facility instead of hardcoding
+  const courts = facility?.courts?.map(court => ({
+    id: court.id,
+    name: court.name,
+    sport: court.sport
+  })) || [];
+
+  // Get time slots from facility operating hours
+  const getTimeSlots = () => {
+    if (!facility?.operatingHours) {
+      // Fallback to default hours if not available
+      return ['8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', 
+              '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', 
+              '6:00 PM', '7:00 PM'];
+    }
+
+    const dayOfWeek = selectedDate.getDay();
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+    
+    const hours = isWeekend ? facility.operatingHours.weekend : facility.operatingHours.weekday;
+    const [startHour] = hours.start.split(':').map(Number);
+    const [endHour] = hours.end.split(':').map(Number);
+    
+    const slots = [];
+    for (let hour = startHour; hour < endHour; hour++) {
+      const period = hour >= 12 ? 'PM' : 'AM';
+      const displayHour = hour % 12 || 12;
+      slots.push(`${displayHour}:00 ${period}`);
+    }
+    
+    return slots;
+  };
+
+  const timeSlots = getTimeSlots();
 
   // Mobile detection
   useEffect(() => {
@@ -38,54 +61,6 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-
-  // FIXED: Time slots based on actual operating hours
-  const getTimeSlots = () => {
-    const dayOfWeek = selectedDate.getDay();
-    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-    
-    if (isWeekend) {
-      return [
-        '6:00 AM', '7:00 AM', '8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM',
-        '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM',
-        '6:00 PM', '7:00 PM', '8:00 PM', '9:00 PM'
-      ];
-    } else {
-      return [
-        '8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM',
-        '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM',
-        '6:00 PM', '7:00 PM'
-      ];
-    }
-  };
-
-  const timeSlots = getTimeSlots();
-
-  // App Icon Component
-  const AppIcon = () => (
-    <div className="w-6 h-6 md:w-8 md:h-8 flex items-center justify-center">
-      <img
-        src={require('../assets/images/app-icon.png')}
-        alt="Dome Logo"
-        className="w-6 h-6 md:w-8 md:h-8 object-contain"
-        onError={(e) => {
-          e.target.style.display = 'none';
-          e.target.nextSibling.style.display = 'flex';
-        }}
-      />
-      <div 
-        className="w-6 h-6 md:w-8 md:h-8 rounded-lg flex items-center justify-center font-bold text-white"
-        style={{ 
-          backgroundColor: '#EF4444',
-          fontSize: isMobile ? '10px' : '12px',
-          letterSpacing: '0.5px',
-          display: 'none'
-        }}
-      >
-        D
-      </div>
-    </div>
-  );
 
   // Update current time every minute
   useEffect(() => {
@@ -97,8 +72,10 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
 
   // Load availability when date changes
   useEffect(() => {
-    loadAvailability();
-  }, [selectedDate]);
+    if (facilitySlug) {
+      loadAvailability();
+    }
+  }, [selectedDate, facilitySlug]);
 
   // Close date picker when clicking outside
   useEffect(() => {
@@ -108,20 +85,18 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showDatePicker]);
 
+  // Listen for booking events
   useEffect(() => {
-    // Listen for booking cancellations and refresh availability
-    const handleBookingCancelled = (event) => {
-      console.log('Booking cancelled, refreshing availability...', event.detail);
-      loadAvailability(); // This calls your existing loadAvailability function
+    const handleBookingCancelled = () => {
+      console.log('Booking cancelled, refreshing availability...');
+      loadAvailability();
     };
 
     const handleRefreshAvailability = () => {
-      console.log('Manual refresh requested, refreshing availability...');
+      console.log('Manual refresh requested...');
       loadAvailability();
     };
 
@@ -132,49 +107,21 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
       window.removeEventListener('bookingCancelled', handleBookingCancelled);
       window.removeEventListener('refreshAvailability', handleRefreshAvailability);
     };
-  }, [selectedDate]); // Include selectedDate dependency to ensure it refreshes for current date
-
-  // Helper function to check if a time slot is in the past
-  const isTimeSlotInPast = (timeSlot) => {
-    const now = new Date();
-    const selectedDateOnly = new Date(selectedDate);
-    selectedDateOnly.setHours(0, 0, 0, 0);
-    
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    if (selectedDateOnly < today) {
-      return true;
-    }
-    
-    if (selectedDateOnly > today) {
-      return false;
-    }
-    
-    if (selectedDateOnly.getTime() === today.getTime()) {
-      const time24 = convertTo24Hour(timeSlot);
-      const [hours, minutes] = time24.split(':').map(Number);
-      
-      const slotDateTime = new Date(selectedDate);
-      slotDateTime.setHours(hours, minutes, 0, 0);
-      
-      const currentTimePlus15 = new Date(now.getTime() + 15 * 60 * 1000);
-      
-      return slotDateTime <= currentTimePlus15;
-    }
-    
-    return false;
-  };
+  }, [selectedDate, facilitySlug]);
 
   const loadAvailability = async () => {
+    if (!facilitySlug) {
+      setError('Facility not loaded');
+      return;
+    }
+
     setLoading(true);
     setError(null);
   
     try {
       const dateStr = selectedDate.toISOString().split('T')[0];
-    
-      // Use ApiService with facility slug
-      const facilitySlug = 'vision-badminton';
+      
+      console.log('Loading availability for facility:', facilitySlug, 'date:', dateStr);
       const data = await ApiService.getAvailability(facilitySlug, dateStr);
     
       if (data && data.availability) {
@@ -183,7 +130,6 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
       } else {
         throw new Error('Invalid API response format');
       }
-    
     } catch (error) {
       console.error('Failed to load availability:', error);
       setError(error.message);
@@ -251,12 +197,10 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
     setCalendarDate(newDate);
   };
 
-  // Generate calendar grid
   const generateCalendarGrid = () => {
     const year = calendarDate.getFullYear();
     const month = calendarDate.getMonth();
     const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
     const startDate = new Date(firstDay);
     startDate.setDate(startDate.getDate() - firstDay.getDay());
     
@@ -284,6 +228,31 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
     }
     
     return days;
+  };
+
+  const isTimeSlotInPast = (timeSlot) => {
+    const now = new Date();
+    const selectedDateOnly = new Date(selectedDate);
+    selectedDateOnly.setHours(0, 0, 0, 0);
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (selectedDateOnly < today) return true;
+    if (selectedDateOnly > today) return false;
+    
+    if (selectedDateOnly.getTime() === today.getTime()) {
+      const time24 = convertTo24Hour(timeSlot);
+      const [hours, minutes] = time24.split(':').map(Number);
+      
+      const slotDateTime = new Date(selectedDate);
+      slotDateTime.setHours(hours, minutes, 0, 0);
+      
+      const currentTimePlus15 = new Date(now.getTime() + 15 * 60 * 1000);
+      return slotDateTime <= currentTimePlus15;
+    }
+    
+    return false;
   };
 
   const convertTo24Hour = (time12) => {
@@ -333,9 +302,7 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
     const time24 = convertTo24Hour(time);
     const isPastSlot = isTimeSlotInPast(time);
     
-    if (isPastSlot) {
-      return 'past';
-    }
+    if (isPastSlot) return 'past';
     
     const isAvailable = availability[court.id]?.[time24] === true;
     return isAvailable ? 'available' : 'unavailable';
@@ -346,9 +313,7 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
     timeSlots.forEach(time => {
       courts.forEach(court => {
         const status = getSlotStatus(court, time);
-        if (status === 'available') {
-          count++;
-        }
+        if (status === 'available') count++;
       });
     });
     return count;
@@ -412,6 +377,32 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
     });
   };
 
+  // App Icon Component
+  const AppIcon = () => (
+    <div className="w-6 h-6 md:w-8 md:h-8 flex items-center justify-center">
+      <img 
+        src={require('../assets/images/app-icon.png')}
+        alt="Dome Logo" 
+        className="w-6 h-6 md:w-8 md:h-8 object-contain"
+        onError={(e) => {
+          e.target.style.display = 'none';
+          e.target.nextSibling.style.display = 'flex';
+        }}
+      />
+      <div 
+        className="w-6 h-6 md:w-8 md:h-8 rounded-lg flex items-center justify-center font-bold text-white"
+        style={{ 
+          backgroundColor: '#EF4444',
+          fontSize: isMobile ? '10px' : '12px',
+          letterSpacing: '0.5px',
+          display: 'none'
+        }}
+      >
+        D
+      </div>
+    </div>
+  );
+
   // Mobile Court View Component
   const MobileCourtView = () => (
     <div className="p-4 space-y-4 bg-gray-50 min-h-screen">
@@ -465,7 +456,7 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
                       <div className="font-medium">{time}</div>
                       {status !== 'past' && (
                         <div className="text-xs mt-1">
-                          {isAvailable ? '$25' : 'Booked'}
+                          {isAvailable ? `$${facility?.pricing?.courtRental || 25}` : 'Booked'}
                         </div>
                       )}
                     </button>
@@ -478,6 +469,29 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
       })}
     </div>
   );
+
+  // Show loading state if facility not loaded
+  if (!facility || !facilitySlug) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading facility...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if no courts available
+  if (courts.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <p className="text-red-600">No courts available for this facility</p>
+        </div>
+      </div>
+    );
+  }
 
   // Main Render
   return (
@@ -546,7 +560,7 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
               </div>
             </div>
           ) : (
-            // Desktop Layout (unchanged)
+            // Desktop Layout
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-3">
@@ -909,7 +923,7 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
                                 color: '#6B7280'
                               }}
                             >
-                              $25/hour
+                              ${facility?.pricing?.courtRental || 25}/hour
                             </div>
                           </div>
                         ) : (
@@ -973,13 +987,14 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
               </div>
             </div>
             <div style={{ fontSize: '14px', color: '#6B7280' }}>
-              Weekdays: 8:00 AM - 8:00 PM • Weekends: 6:00 AM - 10:00 PM
+              {facility?.operatingHours?.weekday?.start || '8:00'} - {facility?.operatingHours?.weekday?.end || '20:00'} (Weekdays) • 
+              {facility?.operatingHours?.weekend?.start || '6:00'} - {facility?.operatingHours?.weekend?.end || '22:00'} (Weekends)
             </div>
           </div>
         </div>
-        )}
-      </div>
-    );
-  };
+      )}
+    </div>
+  );
+};
 
-  export default CalendarView;
+export default CalendarView;

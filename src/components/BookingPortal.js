@@ -1,4 +1,4 @@
-// src/components/BookingPortal.js - Fixed booking creation timing
+// src/components/BookingPortal.js - Updated to use centralized pricing utility
 import React, { useState, useEffect } from 'react';
 import { useFacility } from './FacilityLoader';
 import CalendarView from './CalendarView';
@@ -7,6 +7,7 @@ import BookingForm from './BookingForm';
 import PaymentView from './PaymentView';
 import ProgressIndicator from './ProgressIndicator';
 import ApiService from '../services/api';
+import { calculateBookingPrice } from '../utils/pricing';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 
@@ -27,42 +28,23 @@ const BookingPortal = () => {
     userId: '',
     discountCode: ''
   });
-  const [paymentData, setPaymentData] = useState({
-    courtRental: 25.00,
-    serviceFee: 0.25,
-    discountAmount: 0,
-    subtotal: 25.25,
-    tax: 3.28,
-    totalAmount: 28.53,
-    finalAmount: 28.53
-  });
+  const [paymentData, setPaymentData] = useState(null);
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Set facility in API service when it loads
   useEffect(() => {
     if (facilitySlug) {
       ApiService.setFacility(facilitySlug);
     }
   }, [facilitySlug]);
 
+  // Initialize payment data when facility loads
   useEffect(() => {
     if (facility) {
-      const courtRental = facility.pricing.courtRental;
-      const serviceFee = courtRental * (facility.pricing.serviceFeePercentage / 100);
-      const subtotal = courtRental + serviceFee;
-      const tax = subtotal * (facility.pricing.taxPercentage / 100);
-      const finalTotal = subtotal + tax;
-      
-      setPaymentData({
-        courtRental: parseFloat(courtRental.toFixed(2)),
-        serviceFee: parseFloat(serviceFee.toFixed(2)),
-        discountAmount: 0,
-        subtotal: parseFloat(subtotal.toFixed(2)),
-        tax: parseFloat(tax.toFixed(2)),
-        totalAmount: parseFloat(finalTotal.toFixed(2)),
-        finalAmount: parseFloat(finalTotal.toFixed(2))
-      });
+      const pricing = calculateBookingPrice(facility, 60, 0);
+      setPaymentData(pricing);
     }
   }, [facility]);
 
@@ -78,32 +60,20 @@ const BookingPortal = () => {
     });
     setSelectedDate(slotData.date);
     
-    const courtRental = facility.pricing.courtRental;
-    const serviceFee = courtRental * (facility.pricing.serviceFeePercentage / 100);
-    const subtotal = courtRental + serviceFee;
-    const tax = subtotal * (facility.pricing.taxPercentage / 100);
-    const finalTotal = subtotal + tax;
-    
-    setPaymentData({
-      courtRental: parseFloat(courtRental.toFixed(2)),
-      serviceFee: parseFloat(serviceFee.toFixed(2)),
-      discountAmount: 0,
-      subtotal: parseFloat(subtotal.toFixed(2)),
-      tax: parseFloat(tax.toFixed(2)),
-      totalAmount: parseFloat(finalTotal.toFixed(2)),
-      finalAmount: parseFloat(finalTotal.toFixed(2))
-    });
+    // Calculate initial pricing for selected slot
+    const pricing = calculateBookingPrice(facility, 60, 0);
+    setPaymentData(pricing);
 
     setCurrentStep(2);
   };
 
-  // FIXED: Don't create booking here - just save form data
+  // FIXED: Just save form data, don't create booking yet
   const handleBookingSubmit = async (formData) => {
     try {
       setLoading(true);
       console.log('Form data saved, moving to payment step');
       
-      // Just store the form data - booking will be created after payment
+      // Store the form data - booking will be created after payment
       setBookingData(formData);
       setCurrentStep(3);
       
@@ -117,6 +87,11 @@ const BookingPortal = () => {
 
   const handlePaymentSuccess = () => {
     setSuccess(true);
+    
+    // Dispatch event to refresh availability in calendar/layout views
+    window.dispatchEvent(new CustomEvent('bookingCreated', {
+      detail: { facilitySlug }
+    }));
   };
 
   const resetBooking = () => {
@@ -131,21 +106,11 @@ const BookingPortal = () => {
       discountCode: ''
     });
     
-    const courtRental = facility.pricing.courtRental;
-    const serviceFee = courtRental * (facility.pricing.serviceFeePercentage / 100);
-    const subtotal = courtRental + serviceFee;
-    const tax = subtotal * (facility.pricing.taxPercentage / 100);
-    const finalTotal = subtotal + tax;
-    
-    setPaymentData({
-      courtRental: parseFloat(courtRental.toFixed(2)),
-      serviceFee: parseFloat(serviceFee.toFixed(2)),
-      discountAmount: 0,
-      subtotal: parseFloat(subtotal.toFixed(2)),
-      tax: parseFloat(tax.toFixed(2)),
-      totalAmount: parseFloat(finalTotal.toFixed(2)),
-      finalAmount: parseFloat(finalTotal.toFixed(2))
-    });
+    // Reset pricing to initial state
+    if (facility) {
+      const pricing = calculateBookingPrice(facility, 60, 0);
+      setPaymentData(pricing);
+    }
     
     setSuccess(false);
     setErrors({});
@@ -154,6 +119,18 @@ const BookingPortal = () => {
   const handleViewChange = (view) => {
     setCurrentView(view);
   };
+
+  // Show loading state while facility loads
+  if (!facility || !paymentData) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading booking portal...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Elements stripe={stripePromise}>
@@ -186,10 +163,9 @@ const BookingPortal = () => {
           </div>
         )}
         
+        {/* Step 1: Select Court & Time */}
         {currentStep === 1 && currentView === 'calendar' && (
           <CalendarView 
-            facility={facility}
-            facilitySlug={facilitySlug}
             onBookingSelect={handleSlotSelect}
             viewMode={currentView}
             onViewModeChange={handleViewChange}
@@ -200,8 +176,6 @@ const BookingPortal = () => {
 
         {currentStep === 1 && currentView === 'layout' && (
           <CourtLayoutView 
-            facility={facility}
-            facilitySlug={facilitySlug}
             onBookingSelect={handleSlotSelect}
             selectedDate={selectedDate}
             setSelectedDate={setSelectedDate}
@@ -210,6 +184,7 @@ const BookingPortal = () => {
           />
         )}
         
+        {/* Step 2: Booking Form */}
         {currentStep === 2 && (
           <div className="py-8">
             <div className="max-w-6xl mx-auto px-4">
@@ -231,6 +206,7 @@ const BookingPortal = () => {
           </div>
         )}
         
+        {/* Step 3: Payment */}
         {currentStep === 3 && (
           <div className="py-8">
             <div className="max-w-6xl mx-auto px-4">
@@ -246,9 +222,6 @@ const BookingPortal = () => {
                 onSuccess={handlePaymentSuccess}
                 onReset={resetBooking}
                 success={success}
-                loading={loading}
-                errors={errors}
-                setErrors={setErrors}
               />
             </div>
           </div>
