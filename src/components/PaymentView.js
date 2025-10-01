@@ -206,7 +206,6 @@ const PaymentView = ({
   // Single booking creation method after payment success
   const createBookingAfterPayment = async (paymentIntentId) => {
     try {
-      // Calculate end time
       const duration = selectedSlot.duration || 60;
       const startTime24 = selectedSlot.time24;
       const [startHour, startMin] = startTime24.split(':').map(Number);
@@ -215,14 +214,27 @@ const PaymentView = ({
       const endMin = totalMinutes % 60;
       const endTime24 = `${endHour.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`;
 
+      // FIXED: Use local timezone for date formatting
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(selectedDate.getDate()).padStart(2, '0');
+      const bookingDateString = `${year}-${month}-${day}`;
+
+      console.log('Booking date (local):', {
+        selectedDate: selectedDate.toString(),
+        formattedDate: bookingDateString,
+        startTime: startTime24,
+        endTime: endTime24
+      });
+
       const bookingPayload = {
         facilityId: facility.venueId.toString(),
         courtNumber: selectedCourt.id,
-        bookingDate: selectedDate.toISOString().split('T')[0],
+        bookingDate: bookingDateString,  // Use local date string
         startTime: startTime24,
         endTime: endTime24,
         duration: duration,
-        totalAmount: totalAmount, // Use the consistent totalAmount
+        totalAmount: totalAmount,
         discountCode: bookingData.discountCode || null,
         discountAmount: paymentData.discountAmount || 0,
         source: 'web',

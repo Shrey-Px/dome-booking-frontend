@@ -146,7 +146,7 @@ const BookingForm = ({
               <span>Service Fee (1%):</span>
               <span>${paymentData.serviceFee?.toFixed(2) || '0.25'}</span>
             </div>
-            {paymentData.discountAmount > 0 && (
+            {(paymentData.discountAmount > 0) && (
               <div className="flex justify-between text-green-600 text-sm">
                 <span>Discount Applied:</span>
                 <span>-${paymentData.discountAmount.toFixed(2)}</span>
@@ -162,7 +162,10 @@ const BookingForm = ({
             </div>
             <div className="flex justify-between font-bold text-lg pt-1 border-t">
               <span>Total:</span>
-              <span className="text-red-600">${paymentData.finalAmount?.toFixed(2) || '28.53'}</span>
+              {/* FIXED: Check both property names */}
+              <span className="text-red-600">
+                ${(paymentData.finalAmount || paymentData.finalTotal)?.toFixed(2) || '28.53'}
+              </span>
             </div>
           </div>
         </div>
