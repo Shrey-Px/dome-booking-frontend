@@ -1,9 +1,8 @@
-// components/PaymentView.js - FIXED: Removed duplicate logic, uses pricing utility
+// components/PaymentView.js - FIXED: Consistent property names for discount
 import React, { useState, useEffect } from 'react';
 import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { CreditCard, AlertCircle, Loader, CheckCircle } from 'lucide-react';
 import ApiService from '../services/api';
-import { formatPrice } from '../utils/pricing';
 
 const PaymentView = ({
   facility,
@@ -33,6 +32,34 @@ const PaymentView = ({
     }
   });
 
+  // FIXED: Use finalAmount consistently (same property name as BookingForm sets)
+  const totalAmount = paymentData.finalAmount || paymentData.finalTotal;
+
+  console.log('PaymentView received paymentData:', paymentData);
+  console.log('Total amount to charge:', totalAmount);
+
+  // Early return if invalid amount - BEFORE any other logic
+  if (!totalAmount || totalAmount <= 0) {
+    console.error('Invalid payment amount:', paymentData);
+    return (
+      <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="text-center py-12">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h3 className="text-xl font-bold text-gray-900 mb-2">Payment Error</h3>
+          <p className="text-gray-600 mb-6">
+            Unable to calculate payment amount. Please go back and try again.
+          </p>
+          <button
+            onClick={onBack}
+            className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+          >
+            ← Back to Details
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const formatDate = (date) => {
     return date.toLocaleDateString('en-US', {
       weekday: 'long',
@@ -42,18 +69,22 @@ const PaymentView = ({
     });
   };
 
+  const formatPrice = (amount) => {
+    return `$${parseFloat(amount).toFixed(2)}`;
+  };
+
   // Create payment intent when component mounts
   useEffect(() => {
-    if (!success && paymentData.finalTotal > 0 && !clientSecret) {
+    if (!success && totalAmount > 0 && !clientSecret) {
       createPaymentIntent();
     }
-  }, [paymentData.finalTotal, success, clientSecret]);
+  }, [totalAmount, success, clientSecret]);
 
   const createPaymentIntent = async () => {
     try {
-      console.log('Creating payment intent for amount:', paymentData.finalTotal);
+      console.log('Creating payment intent for amount:', totalAmount);
       const result = await ApiService.createPaymentIntent(
-        Math.round(paymentData.finalTotal * 100), // Convert to cents
+        Math.round(totalAmount * 100), // Convert to cents
         'cad'
       );
       
@@ -172,7 +203,7 @@ const PaymentView = ({
     }
   };
 
-  // FIXED: Single booking creation method after payment success
+  // Single booking creation method after payment success
   const createBookingAfterPayment = async (paymentIntentId) => {
     try {
       // Calculate end time
@@ -191,7 +222,7 @@ const PaymentView = ({
         startTime: startTime24,
         endTime: endTime24,
         duration: duration,
-        totalAmount: paymentData.finalTotal,
+        totalAmount: totalAmount, // Use the consistent totalAmount
         discountCode: bookingData.discountCode || null,
         discountAmount: paymentData.discountAmount || 0,
         source: 'web',
@@ -295,30 +326,30 @@ const PaymentView = ({
                 <div className="text-sm space-y-1">
                   <div className="flex justify-between">
                     <span>Court Rental:</span>
-                    <span>{formatPrice(paymentData.courtRental, paymentData.currency)}</span>
+                    <span>{formatPrice(paymentData.courtRental)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Service Fee:</span>
-                    <span>{formatPrice(paymentData.serviceFee, paymentData.currency)}</span>
+                    <span>{formatPrice(paymentData.serviceFee)}</span>
                   </div>
                   {paymentData.discountAmount > 0 && (
                     <div className="flex justify-between text-green-600">
                       <span>Discount Applied:</span>
-                      <span>-{formatPrice(paymentData.discountAmount, paymentData.currency)}</span>
+                      <span>-{formatPrice(paymentData.discountAmount)}</span>
                     </div>
                   )}
                   <div className="flex justify-between">
                     <span>Subtotal:</span>
-                    <span>{formatPrice(paymentData.subtotal, paymentData.currency)}</span>
+                    <span>{formatPrice(paymentData.subtotal)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Tax (13% HST):</span>
-                    <span>{formatPrice(paymentData.tax, paymentData.currency)}</span>
+                    <span>{formatPrice(paymentData.tax)}</span>
                   </div>
                 </div>
                 <div className="flex justify-between font-bold text-lg border-t pt-2 mt-2">
                   <span>Total Paid:</span>
-                  <span className="text-green-600">{formatPrice(paymentData.finalTotal, paymentData.currency)}</span>
+                  <span className="text-green-600">{formatPrice(totalAmount)}</span>
                 </div>
               </div>
             </div>
@@ -353,17 +384,17 @@ const PaymentView = ({
         </button>
       </div>
 
-      {/* Order Summary */}
+      {/* Order Summary - FIXED: Uses totalAmount consistently */}
       <div className="bg-gray-50 rounded-lg p-4 mb-6">
         <h3 className="font-semibold text-gray-900 mb-3">Order Summary</h3>
         <div className="space-y-2">
           <div className="flex justify-between">
             <span>Court Rental ({selectedCourt.name})</span>
-            <span>{formatPrice(paymentData.courtRental, paymentData.currency)}</span>
+            <span>{formatPrice(paymentData.courtRental)}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span>Service Fee</span>
-            <span>{formatPrice(paymentData.serviceFee, paymentData.currency)}</span>
+            <span>{formatPrice(paymentData.serviceFee)}</span>
           </div>
           <div className="flex justify-between text-sm text-gray-600">
             <span>{formatDate(selectedDate)} • {selectedSlot.displayTime}</span>
@@ -372,20 +403,20 @@ const PaymentView = ({
           {paymentData.discountAmount > 0 && (
             <div className="flex justify-between text-green-600">
               <span>Discount applied</span>
-              <span>-{formatPrice(paymentData.discountAmount, paymentData.currency)}</span>
+              <span>-{formatPrice(paymentData.discountAmount)}</span>
             </div>
           )}
           <div className="flex justify-between">
             <span>Subtotal</span>
-            <span>{formatPrice(paymentData.subtotal, paymentData.currency)}</span>
+            <span>{formatPrice(paymentData.subtotal)}</span>
           </div>
           <div className="flex justify-between">
             <span>Tax (13% HST)</span>
-            <span>{formatPrice(paymentData.tax, paymentData.currency)}</span>
+            <span>{formatPrice(paymentData.tax)}</span>
           </div>
           <div className="border-t pt-2 flex justify-between font-bold text-lg">
             <span>Total</span>
-            <span className="text-red-600">{formatPrice(paymentData.finalTotal, paymentData.currency)}</span>
+            <span className="text-red-600">{formatPrice(totalAmount)}</span>
           </div>
         </div>
       </div>
@@ -491,7 +522,7 @@ const PaymentView = ({
               Processing Payment...
             </>
           ) : (
-            `Pay ${formatPrice(paymentData.finalTotal, paymentData.currency)}`
+            `Pay ${formatPrice(totalAmount)}`
           )}
         </button>
       </form>

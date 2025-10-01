@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import { User, Mail, Phone, AlertCircle, Loader } from 'lucide-react';
 import ApiService from '../services/api';
+// At the top of BookingForm.js
+import { calculateBookingPrice } from '../utils/pricing';
 
 const BookingForm = ({
   facility,
@@ -35,23 +37,6 @@ const BookingForm = ({
       month: 'long',
       day: 'numeric'
     });
-  };
-
-  // New pricing calculation function
-  const calculatePricing = (courtRental, discountAmount = 0) => {
-    const serviceFee = courtRental * 0.01; // 1% of court rental
-    const subtotal = courtRental + serviceFee - discountAmount;
-    const tax = subtotal * 0.13; // 13% tax
-    const finalTotal = subtotal + tax;
-
-    return {
-      courtRental: parseFloat(courtRental.toFixed(2)),
-      serviceFee: parseFloat(serviceFee.toFixed(2)),
-      discountAmount: parseFloat(discountAmount.toFixed(2)),
-      subtotal: parseFloat(subtotal.toFixed(2)),
-      tax: parseFloat(tax.toFixed(2)),
-      finalTotal: parseFloat(finalTotal.toFixed(2))
-    };
   };
 
   const handleInputChange = (field, value) => {
@@ -95,35 +80,20 @@ const BookingForm = ({
       if (result.success && discountData.discountAmount) {
         const discountAmount = discountData.discountAmount;
       
-        const courtRental = paymentData.courtRental;
-        const serviceFee = paymentData.serviceFee;
-        const subtotal = courtRental + serviceFee - discountAmount;
-        const tax = subtotal * 0.13;
-        const finalTotal = subtotal + tax;
+        // Use the centralized pricing utility
+        const updatedPricing = calculateBookingPrice(facility, 60, discountAmount);
 
-        console.log('Updated pricing:', {
-          courtRental,
-          serviceFee,
-          discountAmount,
-          subtotal: subtotal.toFixed(2),
-          tax: tax.toFixed(2),
-          finalTotal: finalTotal.toFixed(2)
-        });
+        console.log('Updated pricing:', updatedPricing);
 
         setPaymentData({
           ...paymentData,
-          discountAmount: discountAmount,
-          subtotal: parseFloat(subtotal.toFixed(2)),
-          tax: parseFloat(tax.toFixed(2)),
-          finalAmount: parseFloat(finalTotal.toFixed(2))
+          ...updatedPricing
         });
 
         setDiscountApplied(true);
       
         // Clear any previous errors
         setErrors(prev => ({ ...prev, discount: '' }));
-      } else {
-        throw new Error('Invalid discount response');
       }
     } catch (error) {
       console.error('Discount error:', error);
