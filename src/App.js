@@ -7,6 +7,10 @@ import BookingPortal from './components/BookingPortal';
 import CancellationPage from './components/CancellationPage';
 import FacilityLoader from './components/FacilityLoader';
 import NotFound from './components/NotFound';
+// Add these imports at the top
+import VendorLogin from './components/vendor/VendorLogin';
+import VendorDashboard from './components/vendor/VendorDashboard';
+import ProtectedRoute from './components/vendor/ProtectedRoute';
 
 function App() {
   return (
@@ -21,6 +25,17 @@ function App() {
             <Route 
               path="/cancel-booking" 
               element={<Navigate to="/vision-badminton/cancel-booking" replace />} 
+            />
+
+            // Add these routes in the Routes section (before the 404 catch-all)
+            <Route path="/vendor/login" element={<VendorLogin />} />
+            <Route 
+              path="/vendor/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <VendorDashboard />
+                </ProtectedRoute>
+              } 
             />
             
             {/* Multi-tenant facility routes with error boundaries */}

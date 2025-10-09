@@ -148,7 +148,7 @@ const CancellationModal = ({ bookingId, isOpen, onClose, onSuccess, onRefreshAva
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center text-gray-600">
                     <MapPin size={16} className="mr-2" />
-                    <span>{booking.fieldName || `Court ${booking.courtNumber}`} - Vision Badminton Centre</span>
+                    <span>{booking.fieldName || `Court ${booking.courtNumber}`}</span>
                   </div>
                   
                   <div className="flex items-center text-gray-600">

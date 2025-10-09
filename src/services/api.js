@@ -14,8 +14,8 @@ class ApiService {
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
     
-    console.log('API Request:', url);
-    console.log('Request options:', options);
+    // console.log('API Request:', url);
+    // console.log('Request options:', options);
     
     const config = {
       headers: {
@@ -38,10 +38,10 @@ class ApiService {
     try {
       const response = await fetch(url, config);
       
-      console.log('Response status:', response.status);
+      // console.log('Response status:', response.status);
       
       const responseText = await response.text();
-      console.log('Raw response text:', responseText);
+      // console.log('Raw response text:', responseText);
       
       if (!response.ok) {
         console.error('HTTP Error Response:', {
@@ -68,7 +68,7 @@ class ApiService {
         throw new Error('Invalid JSON response from server');
       }
       
-      console.log('Parsed response data:', data);
+      // console.log('Parsed response data:', data);
       return data;
       
     } catch (error) {
@@ -121,8 +121,8 @@ class ApiService {
   // Availability - Updated to use facility from context
   async getAvailability(facilitySlug, date) {
     try {
-      console.log('Getting availability...');
-      console.log('Facility slug:', facilitySlug);
+      // console.log('Getting availability...');
+      // console.log('Facility slug:', facilitySlug);
       
       // Ensure date is in YYYY-MM-DD format
       let dateStr;
@@ -137,15 +137,15 @@ class ApiService {
         throw new Error(`Invalid date type: ${typeof date}`);
       }
       
-      console.log('Formatted date string:', dateStr);
+      // console.log('Formatted date string:', dateStr);
       
       const timestamp = new Date().getTime();
       const url = `/availability?facility=${facilitySlug}&date=${dateStr}&_t=${timestamp}`;
       
-      console.log('Final URL:', this.baseURL + url);
+      // console.log('Final URL:', this.baseURL + url);
       
       const result = await this.request(url);
-      console.log('Availability result:', result);
+      // console.log('Availability result:', result);
       
       return result.data || result;
       
@@ -160,12 +160,12 @@ class ApiService {
     const dateString = typeof date === 'string' ? date : date.toISOString().split('T')[0];
 
     try {
-      console.log('Loading bookings for facility:', facilitySlug, 'date:', dateString);
+      // console.log('Loading bookings for facility:', facilitySlug, 'date:', dateString);
       
       const result = await this.getAvailability(facilitySlug, dateString);
       
       if (!result || !result.availability) {
-        console.log('No availability data found');
+        // console.log('No availability data found');
         return {};
       }
       
@@ -195,7 +195,7 @@ class ApiService {
         });
       });
       
-      console.log('Transformed bookings:', bookings);
+      // console.log('Transformed bookings:', bookings);
       return bookings;
       
     } catch (error) {
@@ -206,8 +206,8 @@ class ApiService {
 
   // Booking - Updated to include facility slug
   async createBooking(facilitySlug, bookingData) {
-    console.log('Creating booking with data:', bookingData);
-    console.log('Facility slug:', facilitySlug);
+    // console.log('Creating booking with data:', bookingData);
+    // console.log('Facility slug:', facilitySlug);
     
     const backendBookingData = {
       facilitySlug: facilitySlug, // Add facility slug
@@ -227,24 +227,24 @@ class ApiService {
       source: 'web'
     };
     
-    console.log('Backend booking payload:', backendBookingData);
+    // console.log('Backend booking payload:', backendBookingData);
     
     const result = await this.request('/booking/create-booking', {
       method: 'POST',
       body: backendBookingData,
     });
     
-    console.log('Booking created:', result);
+    // console.log('Booking created:', result);
     return result.data || result;
   }
 
   async applyDiscount(facilitySlug, discountCode, amount) {
-    console.log('Applying discount:', { facilitySlug, discountCode, amount });
+    // console.log('Applying discount:', { facilitySlug, discountCode, amount });
     const result = await this.request('/discount/apply-discount', {
       method: 'POST',
       body: { code: discountCode, amount, facilitySlug },
     });
-    console.log('Discount result:', result);
+    // console.log('Discount result:', result);
     return result;
   }
 
