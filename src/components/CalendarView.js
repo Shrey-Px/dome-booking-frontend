@@ -777,13 +777,21 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
         // Desktop Calendar Grid
         <div className="max-w-7xl mx-auto" style={{ padding: '24px' }}>
           <div 
-            className="rounded-xl overflow-hidden relative"
+            className="rounded-xl overflow-x-auto relative"
             style={{ 
+      	      maxWidth: '100%'
+    	    }}
+          > 
+  	  <div 
+    	    className="relative"
+    	    style={{ 
+              minWidth: 'fit-content',
               backgroundColor: '#FFFFFF',
               boxShadow: '0 10px 15px rgba(0, 0, 0, 0.1)',
-              border: '1px solid #F3F4F6'
+              border: '1px solid #F3F4F6',
+              borderRadius: '12px'
             }}
-          >
+          > 
             {loading && (
               <div 
                 className="absolute inset-0 flex items-center justify-center z-20"
@@ -797,10 +805,13 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
             )}
             
             <div 
-              className="grid grid-cols-11 border-b"
+              className="border-b"
               style={{ 
-                background: 'linear-gradient(to right, #F9FAFB, #F3F4F6)',
-                borderColor: '#E5E7EB'
+    		display: 'grid',
+    		gridTemplateColumns: `140px repeat(${courts.length}, 140px)`,
+    		background: 'linear-gradient(to right, #F9FAFB, #F3F4F6)',
+    		borderColor: '#E5E7EB',
+    		minWidth: 'fit-content'
               }}
             >
               <div 
@@ -857,7 +868,11 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
               {timeSlots.map((time) => (
                 <div 
                   key={time} 
-                  className="grid grid-cols-11"
+                  style={{ 
+      		    display: 'grid',
+      		    gridTemplateColumns: `140px repeat(${courts.length}, 140px)`,
+      		    minWidth: 'fit-content'
+  		  }}
                 >
                   <div 
                     className="border-r font-medium"
@@ -955,6 +970,7 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
                 </div>
               ))}
             </div>
+          </div>
           </div>
 
           <div className="mt-6 flex items-center justify-between">

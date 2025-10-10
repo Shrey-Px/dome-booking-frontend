@@ -8,12 +8,22 @@
  * @param {number} discountAmount - Discount amount in dollars (default: 0)
  * @returns {Object} Price breakdown with all components
  */
-export const calculateBookingPrice = (facility, duration = 60, discountAmount = 0) => {
+export const calculateBookingPrice = (facility, duration = 60, discountAmount = 0, courtId = null) => {
   if (!facility || !facility.pricing) {
     throw new Error('Facility pricing configuration is required');
   }
 
-  const { courtRental, serviceFeePercentage, taxPercentage } = facility.pricing;
+  // Get court-specific pricing if courtId provided
+  let courtRental = facility.pricing.courtRental; // Default facility price
+  
+  if (courtId && facility.courts) {
+    const court = facility.courts.find(c => c.id === courtId);
+    if (court && court.pricing) {
+      courtRental = court.pricing.courtRental;
+    }
+  }
+
+  const { serviceFeePercentage, taxPercentage } = facility.pricing;
 
   // Calculate based on duration (court rental is per hour)
   const hourlyRate = courtRental;
