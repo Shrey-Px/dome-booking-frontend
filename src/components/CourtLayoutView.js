@@ -82,7 +82,7 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, onVie
     const isPickleball = court.sport === 'Pickleball';
     
     // Determine status
-    const status = availableSlots > 10 ? 'available' : 
+    const status = availableSlots > 6 ? 'available' : 
                    availableSlots > 0 ? 'limited' : 
                    'full';
   
@@ -93,8 +93,8 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, onVie
         className="cursor-pointer transform transition-all hover:scale-105 hover:shadow-lg"
       >
         <div 
-          className="aspect-[2/3] rounded-lg border-4 relative p-4"
-          style={{
+          className="aspect-[2/3] rounded-lg border-4 relative p-3"
+          style={{ maxWidth: '180px', margin: '0 auto' }}
             backgroundColor: status === 'available' ? '#F0FDF4' : 
                            status === 'limited' ? '#FEF3C7' : '#FEF2F2',
             borderColor: isPickleball ? '#3B82F6' : 
@@ -156,6 +156,87 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, onVie
     );
   };
 
+  const renderPickleballCourt = (courtIdentifier) => {
+    const court = getCourtById(courtIdentifier);
+    
+    if (!court) return null;
+  
+    const availableSlots = getAvailableSlots(court.id);
+    const status = availableSlots > 6 ? 'available' : 
+                   availableSlots > 0 ? 'limited' : 
+                   'full';
+  
+    return (
+      <div
+        key={court.id}
+        onClick={() => handleCourtClick(court)}
+        className="cursor-pointer transform transition-all hover:scale-105 hover:shadow-lg"
+      >
+        {/* Horizontal layout - swap aspect ratio */}
+        <div 
+          className="aspect-[3/2] rounded-lg border-4 relative p-3"
+          style={{
+            maxWidth: '240px',
+            margin: '0 auto',
+            backgroundColor: status === 'available' ? '#F0FDF4' : 
+                           status === 'limited' ? '#FEF3C7' : '#FEF2F2',
+            borderColor: '#3B82F6'
+          }}
+        >
+          {/* Horizontal Court Net Lines */}
+          <div className="absolute inset-4">
+            <div className="w-full h-full border-2 border-gray-400 relative">
+              {/* Center line - vertical for horizontal court */}
+              <div className="absolute top-0 bottom-0 border-l-2 border-gray-400" style={{ left: '50%' }}></div>
+              {/* Service lines - vertical */}
+              <div className="absolute top-0 bottom-0 border-l border-gray-300" style={{ left: '25%' }}></div>
+              <div className="absolute top-0 bottom-0 border-l border-gray-300" style={{ left: '75%' }}></div>
+              {/* Side lines - horizontal */}
+              <div className="absolute left-0 right-0 border-t border-gray-300" style={{ top: '20%' }}></div>
+              <div className="absolute left-0 right-0 border-b border-gray-300" style={{ bottom: '20%' }}></div>
+            </div>
+          </div>
+          
+          {/* Status Indicator Circle */}
+          <div 
+            className="absolute top-2 right-2 w-4 h-4 rounded-full"
+            style={{
+              backgroundColor: status === 'available' ? '#059669' : 
+                             status === 'limited' ? '#F59E0B' : '#DC2626'
+            }}
+          ></div>
+          
+          {loading && (
+            <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center rounded-lg">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-red-500"></div>
+            </div>
+          )}
+        </div>
+        
+        {/* Court Info Below */}
+        <div className="mt-3 text-center">
+          <h3 className="font-semibold text-lg text-gray-900">
+            {court.name}
+          </h3>
+          <p className="text-sm text-gray-600">
+            {court.sport}
+          </p>
+          <p 
+            className="text-sm font-medium"
+            style={{
+              color: status === 'available' ? '#059669' : 
+                     status === 'limited' ? '#F59E0B' : '#DC2626'
+            }}
+          >
+            {status === 'available' ? `${availableSlots} slots` :
+             status === 'limited' ? `${availableSlots} left` :
+             'Full'}
+          </p>
+        </div>
+      </div>
+    );
+  };
+
   if (loading && !facility) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -174,32 +255,52 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, onVie
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-    	      {/* Add View Toggle */}
-    	      {onViewModeChange && (
-      		<div className="flex bg-gray-700 rounded-lg p-1">
-        	  <button
-          	    onClick={() => onViewModeChange('calendar')}
-          	    className="flex items-center space-x-2 px-3 py-1.5 rounded transition-colors text-sm font-medium bg-white text-gray-900 shadow-sm"
-        	  >
-          	    <span>Calendar</span>
-        	  </button>
-        	  <button
-          	    onClick={() => onViewModeChange('layout')}
-          	    className="flex items-center space-x-2 px-3 py-1.5 rounded transition-colors text-sm font-medium text-gray-300"
-        	  >
-          	    <span>Layout</span>
-        	  </button>
-      	        </div>
-    	      )}
-              <Calendar size={24} />
-              <div>
-                <h1 className="text-xl font-bold">{formatDate(selectedDate)}</h1>
-                <p className="text-sm text-gray-300">
-                  Vision Badminton Centre • 24 Courts
-                </p>
+              {/* Logo */}
+              <div className="flex items-center">
+                <div className="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center mr-3">
+                  <span className="text-white font-bold text-xl">D</span>
+                </div>
+                <div>
+                  <div className="text-xl font-bold">
+                    D<span className="text-red-500">O</span>ME
+                  </div>
+                  <div className="text-xs text-gray-300">Sports Booking</div>
+                </div>
+              </div>
+  
+              {/* View Toggle */}
+              {onViewModeChange && (
+                <div className="flex bg-gray-700 rounded-lg p-1 ml-6">
+                  <button
+                    onClick={() => onViewModeChange('calendar')}
+                    className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
+                      viewMode === 'calendar' 
+                        ? 'bg-white text-gray-900 shadow-sm' 
+                        : 'text-gray-300 hover:text-white hover:bg-gray-600'
+                    }`}
+                  >
+                    Calendar
+                  </button>
+                  <button
+                    onClick={() => onViewModeChange('layout')}
+                    className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
+                      viewMode === 'layout' 
+                        ? 'bg-white text-gray-900 shadow-sm' 
+                        : 'text-gray-300 hover:text-white hover:bg-gray-600'
+                    }`}
+                  >
+                    Layout
+                  </button>
+                </div>
+              )}
+  
+              {/* Facility Name */}
+              <div className="text-lg font-semibold ml-6">
+                {facility?.name || 'Vision Badminton Centre'}
               </div>
             </div>
-
+  
+            {/* Date Navigation - Right Side */}
             <div className="flex items-center space-x-3">
               <button
                 onClick={() => changeDate(-1)}
@@ -234,6 +335,14 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, onVie
               </button>
             </div>
           </div>
+  
+          {/* Date Display Below */}
+          <div className="mt-3 text-center">
+            <h2 className="text-2xl font-bold">{formatDate(selectedDate)}</h2>
+            <p className="text-sm text-gray-300 mt-1">
+              22 Badminton Courts • 2 Pickleball Courts
+            </p>
+          </div>
         </div>
       </div>
 
@@ -256,7 +365,7 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, onVie
             </div>
 
             {/* Row 1: Courts 18, 17, 16 (3 courts) */}
-            <div className="grid grid-cols-4 gap-6 mb-6">
+            <div className="grid grid-cols-4 gap-4 mb-6">
               {renderCourt(null, true)} {/* Empty space */}
               {renderCourt(18)}
               {renderCourt(17)}
@@ -264,7 +373,7 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, onVie
             </div>
 
             {/* Row 2: Courts 15, 14, 13 (3 courts) */}
-            <div className="grid grid-cols-4 gap-6 mb-6">
+            <div className="grid grid-cols-4 gap-4 mb-6">
               {renderCourt(null, true)} {/* Empty space */}
               {renderCourt(15)}
               {renderCourt(14)}
@@ -272,7 +381,7 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, onVie
             </div>
 
             {/* Row 3: Courts 22, 12, 11, 10 (4 courts) */}
-            <div className="grid grid-cols-4 gap-6 mb-6">
+            <div className="grid grid-cols-4 gap-4 mb-6">
               {renderCourt(22)}
               {renderCourt(12)}
               {renderCourt(11)}
@@ -280,7 +389,7 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, onVie
             </div>
 
             {/* Row 4: Courts 21, 9, 8, 7 (4 courts) */}
-            <div className="grid grid-cols-4 gap-6 mb-6">
+            <div className="grid grid-cols-4 gap-4 mb-6">
               {renderCourt(21)}
               {renderCourt(9)}
               {renderCourt(8)}
@@ -288,7 +397,7 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, onVie
             </div>
 
             {/* Row 5: Courts 20, 6, 5, 4 (4 courts) */}
-            <div className="grid grid-cols-4 gap-6 mb-6">
+            <div className="grid grid-cols-4 gap-4 mb-6">
               {renderCourt(20)}
               {renderCourt(6)}
               {renderCourt(5)}
@@ -296,7 +405,7 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, onVie
             </div>
 
             {/* Row 6: Courts 19, 3, 2, 1 (4 courts) */}
-            <div className="grid grid-cols-4 gap-6">
+            <div className="grid grid-cols-4 gap-4">
               {renderCourt(19)}
               {renderCourt(3)}
               {renderCourt(2)}
@@ -318,21 +427,11 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, onVie
               </div>
             </div>
 
-            {/* Row 7: Court P1 */}
-            <div className="grid grid-cols-4 gap-6 mb-6">
-              {renderCourt('Court P1')}
-              {renderCourt(null, true)}
-              {renderCourt(null, true)}
-              {renderCourt(null, true)}
-            </div>
-
-            {/* Row 8: Court P2 */}
-            <div className="grid grid-cols-4 gap-6">
-              {renderCourt('Court P2')}
-              {renderCourt(null, true)}
-              {renderCourt(null, true)}
-              {renderCourt(null, true)}
-            </div>
+	    {/* Pickleball Courts - Horizontal Layout */}
+	    <div className="grid grid-cols-2 gap-6 max-w-3xl mx-auto">
+  	      {renderPickleballCourt('Court P1')}
+  	      {renderPickleballCourt('Court P2')}
+	    </div>
           </div>
 
           {/* Legend & Info */}

@@ -11,6 +11,7 @@ const BookingForm = ({
   selectedDate,
   selectedSlot,
   selectedCourt,
+  court,
   paymentData,
   setPaymentData,
   onBack,
@@ -29,6 +30,22 @@ const BookingForm = ({
   const [discountLoading, setDiscountLoading] = useState(false);
   const [discountApplied, setDiscountApplied] = useState(false);
   const [applyingDiscount, setApplyingDiscount] = useState(false);
+  
+  // ADD THIS: Determine which court to use
+  const courtToUse = selectedCourt || court;
+
+  // Debug logging
+  console.log('BookingForm - Court:', courtToUse);
+  console.log('BookingForm - Court ID:', courtToUse?.id);
+  console.log('BookingForm - Court Pricing:', courtToUse?.pricing);
+
+  console.log('BookingForm - Court Debug:', {
+    selectedCourt,
+    court,
+    courtToUse,
+    courtId: courtToUse?.id,
+    pricing: courtToUse?.pricing
+  });
 
   const formatDate = (date) => {
     return date.toLocaleDateString('en-US', {
@@ -81,7 +98,7 @@ const BookingForm = ({
         const discountAmount = discountData.discountAmount;
       
         // Use the centralized pricing utility
-        const updatedPricing = calculateBookingPrice(facility, 60, discountAmount, court?.id);
+        const updatedPricing = calculateBookingPrice(facility, 60, discountAmount, courtToUse?.id);
 
         console.log('Updated pricing:', updatedPricing);
 
@@ -129,7 +146,7 @@ const BookingForm = ({
         <h3 className="font-semibold text-gray-900 mb-2">Booking Summary</h3>
         <div className="space-y-1">
           <p className="text-gray-700">
-            <span className="font-medium">{selectedCourt.name}</span> • {selectedCourt.sport}
+            <span className="font-medium">{courtToUse.name}</span> • {courtToUse.sport}
           </p>
           <p className="text-gray-700">
             {formatDate(selectedDate)} • {selectedSlot.displayTime}
