@@ -15,11 +15,15 @@ export const calculateBookingPrice = (facility, duration = 60, discountAmount = 
 
   // Get court-specific pricing if courtId provided
   let courtRental = facility.pricing.courtRental; // Default facility price
+
+  console.log('Calculating price for courtId:', courtId); // DEBUG
   
   if (courtId && facility.courts) {
     const court = facility.courts.find(c => c.id === courtId);
+    console.log('Found court:', court); // DEBUG
     if (court && court.pricing) {
       courtRental = court.pricing.courtRental;
+      console.log('Using court-specific price:', courtRental); // DEBUG
     }
   }
 

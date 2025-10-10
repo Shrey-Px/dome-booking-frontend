@@ -73,76 +73,85 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate }) => 
     if (emptySpace) {
       return <div key={`empty-${Math.random()}`} />;
     }
-
+  
     const court = getCourtById(courtIdentifier);
     
     if (!court) return null;
-
+  
     const availableSlots = getAvailableSlots(court.id);
     const isPickleball = court.sport === 'Pickleball';
-    const price = court.pricing?.courtRental || 25;
-
+    
+    // Determine status
+    const status = availableSlots > 10 ? 'available' : 
+                   availableSlots > 0 ? 'limited' : 
+                   'full';
+  
     return (
       <div
         key={court.id}
         onClick={() => handleCourtClick(court)}
-        className="cursor-pointer transition-all hover:shadow-xl hover:scale-105"
-        style={{
-          border: `3px solid ${isPickleball ? '#3B82F6' : '#10B981'}`,
-          borderRadius: '12px',
-          padding: '24px',
-          backgroundColor: '#FFFFFF',
-          minHeight: '200px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          position: 'relative'
-        }}
+        className="cursor-pointer transform transition-all hover:scale-105 hover:shadow-lg"
       >
-        {/* Sport Badge */}
         <div 
-          className="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold"
+          className="aspect-[2/3] rounded-lg border-4 relative p-4"
           style={{
-            backgroundColor: isPickleball ? '#DBEAFE' : '#D1FAE5',
-            color: isPickleball ? '#1E40AF' : '#065F46'
+            backgroundColor: status === 'available' ? '#F0FDF4' : 
+                           status === 'limited' ? '#FEF3C7' : '#FEF2F2',
+            borderColor: isPickleball ? '#3B82F6' : 
+                        status === 'available' ? '#059669' : 
+                        status === 'limited' ? '#F59E0B' : '#DC2626'
           }}
         >
-          {isPickleball ? '🎾' : '🏸'}
+          {/* Court Net Lines */}
+          <div className="absolute inset-4">
+            <div className="w-full h-full border-2 border-gray-400 relative">
+              {/* Center line */}
+              <div className="absolute left-0 right-0 border-t-2 border-gray-400" style={{ top: '50%' }}></div>
+              {/* Service lines */}
+              <div className="absolute left-0 right-0 border-t border-gray-300" style={{ top: '25%' }}></div>
+              <div className="absolute left-0 right-0 border-t border-gray-300" style={{ top: '75%' }}></div>
+              {/* Side lines */}
+              <div className="absolute top-0 bottom-0 border-l border-gray-300" style={{ left: '20%' }}></div>
+              <div className="absolute top-0 bottom-0 border-r border-gray-300" style={{ right: '20%' }}></div>
+            </div>
+          </div>
+          
+          {/* Status Indicator Circle */}
+          <div 
+            className="absolute top-2 right-2 w-4 h-4 rounded-full"
+            style={{
+              backgroundColor: status === 'available' ? '#059669' : 
+                             status === 'limited' ? '#F59E0B' : '#DC2626'
+            }}
+          ></div>
+          
+          {loading && (
+            <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center rounded-lg">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-red-500"></div>
+            </div>
+          )}
         </div>
-
-        {/* Court Number */}
-        <div>
-          <h3 className="text-3xl font-bold text-gray-900 mb-2">
+        
+        {/* Court Info Below */}
+        <div className="mt-3 text-center">
+          <h3 className="font-semibold text-lg text-gray-900">
             {court.name}
           </h3>
-          <div className="text-sm text-gray-600 font-medium">
+          <p className="text-sm text-gray-600">
             {court.sport}
-          </div>
-        </div>
-
-        {/* Availability & Price */}
-        <div className="mt-6">
-          <div 
-            className="text-2xl font-bold mb-2"
-            style={{ color: availableSlots > 0 ? (isPickleball ? '#3B82F6' : '#10B981') : '#EF4444' }}
+          </p>
+          <p 
+            className="text-sm font-medium"
+            style={{
+              color: status === 'available' ? '#059669' : 
+                     status === 'limited' ? '#F59E0B' : '#DC2626'
+            }}
           >
-            {availableSlots > 0 ? `${availableSlots} Available` : 'Fully Booked'}
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-lg font-semibold text-gray-700">
-              ${price}/hour
-            </span>
-            <span className="text-sm text-gray-500">
-              +tax & fees
-            </span>
-          </div>
+            {status === 'available' ? `${availableSlots} slots` :
+             status === 'limited' ? `${availableSlots} left` :
+             'Full'}
+          </p>
         </div>
-
-        {/* Net Illustration */}
-        <div 
-          className="mt-4 border-t-2 opacity-20"
-          style={{ borderColor: isPickleball ? '#3B82F6' : '#10B981' }}
-        />
       </div>
     );
   };
@@ -165,6 +174,23 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate }) => 
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
+    	      {/* Add View Toggle */}
+    	      {onViewModeChange && (
+      		<div className="flex bg-gray-700 rounded-lg p-1">
+        	  <button
+          	    onClick={() => onViewModeChange('calendar')}
+          	    className="flex items-center space-x-2 px-3 py-1.5 rounded transition-colors text-sm font-medium bg-white text-gray-900 shadow-sm"
+        	  >
+          	    <span>Calendar</span>
+        	  </button>
+        	  <button
+          	    onClick={() => onViewModeChange('layout')}
+          	    className="flex items-center space-x-2 px-3 py-1.5 rounded transition-colors text-sm font-medium text-gray-300"
+        	  >
+          	    <span>Layout</span>
+        	  </button>
+      	        </div>
+    	      )}
               <Calendar size={24} />
               <div>
                 <h1 className="text-xl font-bold">{formatDate(selectedDate)}</h1>
@@ -231,18 +257,18 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate }) => 
 
             {/* Row 1: Courts 18, 17, 16 (3 courts) */}
             <div className="grid grid-cols-4 gap-6 mb-6">
+              {renderCourt(null, true)} {/* Empty space */}
               {renderCourt(18)}
               {renderCourt(17)}
               {renderCourt(16)}
-              {renderCourt(null, true)} {/* Empty space */}
             </div>
 
             {/* Row 2: Courts 15, 14, 13 (3 courts) */}
             <div className="grid grid-cols-4 gap-6 mb-6">
+              {renderCourt(null, true)} {/* Empty space */}
               {renderCourt(15)}
               {renderCourt(14)}
               {renderCourt(13)}
-              {renderCourt(null, true)} {/* Empty space */}
             </div>
 
             {/* Row 3: Courts 22, 12, 11, 10 (4 courts) */}
