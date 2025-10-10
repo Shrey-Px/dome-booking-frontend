@@ -81,7 +81,7 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, onVie
     const availableSlots = getAvailableSlots(court.id);
     const isPickleball = court.sport === 'Pickleball';
     
-    // Determine status
+    // Determine status (changed threshold to 6)
     const status = availableSlots > 6 ? 'available' : 
                    availableSlots > 0 ? 'limited' : 
                    'full';
@@ -94,7 +94,9 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, onVie
       >
         <div 
           className="aspect-[2/3] rounded-lg border-4 relative p-3"
-          style={{ maxWidth: '180px', margin: '0 auto' }}
+          style={{
+            maxWidth: '180px',
+            margin: '0 auto',
             backgroundColor: status === 'available' ? '#F0FDF4' : 
                            status === 'limited' ? '#FEF3C7' : '#FEF2F2',
             borderColor: isPickleball ? '#3B82F6' : 
