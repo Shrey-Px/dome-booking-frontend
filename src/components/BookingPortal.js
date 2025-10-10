@@ -14,6 +14,7 @@ import { Elements } from '@stripe/react-stripe-js';
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 
 const BookingPortal = () => {
+  const [viewMode, setViewMode] = useState('calendar');
   const { facility, facilitySlug } = useFacility();
   
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -168,7 +169,7 @@ const BookingPortal = () => {
           <CalendarView 
             onBookingSelect={handleSlotSelect}
             viewMode={currentView}
-            onViewModeChange={handleViewChange}
+            onViewModeChange={setViewMode}
             selectedDate={selectedDate}
             setSelectedDate={setSelectedDate}
           />
@@ -180,7 +181,7 @@ const BookingPortal = () => {
             selectedDate={selectedDate}
             setSelectedDate={setSelectedDate}
             viewMode={currentView}
-            onViewModeChange={handleViewChange}
+            onViewModeChange={setViewMode}
           />
         )}
         
