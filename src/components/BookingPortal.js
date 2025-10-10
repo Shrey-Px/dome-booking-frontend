@@ -33,6 +33,9 @@ const BookingPortal = () => {
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Debug
+  console.log('BookingPortal render - viewMode:', viewMode, 'currentStep:', currentStep);
+
   // Set facility in API service when it loads
   useEffect(() => {
     if (facilitySlug) {
@@ -61,7 +64,7 @@ const BookingPortal = () => {
     setSelectedDate(slotData.date);
     
     // Calculate initial pricing for selected slot
-    const pricing = calculateBookingPrice(facility, 60, 0);
+    const pricing = calculateBookingPrice(facility, 60, 0, slotData.court?.id);
     setPaymentData(pricing);
 
     setCurrentStep(2);
