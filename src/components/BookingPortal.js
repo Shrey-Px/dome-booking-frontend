@@ -21,7 +21,6 @@ const BookingPortal = () => {
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [selectedCourt, setSelectedCourt] = useState(null);
   const [currentStep, setCurrentStep] = useState(1);
-  const [currentView, setCurrentView] = useState('calendar');
   const [bookingData, setBookingData] = useState({
     customerName: '',
     customerEmail: '',
@@ -117,10 +116,6 @@ const BookingPortal = () => {
     setErrors({});
   };
 
-  const handleViewChange = (view) => {
-    setCurrentView(view);
-  };
-
   // Show loading state while facility loads
   if (!facility || !paymentData) {
     return (
@@ -153,7 +148,7 @@ const BookingPortal = () => {
                 Venue ID: {facility.venueId}, 
                 Selected: {selectedCourt?.name || 'none'} at {selectedSlot?.time || 'none'}
                 {selectedSlot && ` (${selectedSlot.time24})`}
-                | View: {currentView}
+                | View: {viewMode}
               </p>
               {errors.submit && (
                 <p className="text-sm text-red-600 mt-1">
@@ -165,22 +160,22 @@ const BookingPortal = () => {
         )}
         
         {/* Step 1: Select Court & Time */}
-        {currentStep === 1 && currentView === 'calendar' && (
+        {currentStep === 1 && viewMode === 'calendar' && (
           <CalendarView 
             onBookingSelect={handleSlotSelect}
-            viewMode={currentView}
+            viewMode={viewMode}
             onViewModeChange={setViewMode}
             selectedDate={selectedDate}
             setSelectedDate={setSelectedDate}
           />
         )}
 
-        {currentStep === 1 && currentView === 'layout' && (
+        {currentStep === 1 && viewMode === 'layout' && (
           <CourtLayoutView 
             onBookingSelect={handleSlotSelect}
             selectedDate={selectedDate}
             setSelectedDate={setSelectedDate}
-            viewMode={currentView}
+            viewMode={viewMode}
             onViewModeChange={setViewMode}
           />
         )}
