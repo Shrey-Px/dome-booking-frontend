@@ -4,7 +4,7 @@ import { Calendar, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useFacility } from './FacilityLoader';
 import ApiService from '../services/api';
 
-const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, onViewModeChange }) => {
+const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewMode, onViewModeChange }) => {
   const { facility, facilitySlug } = useFacility();
   const [availability, setAvailability] = useState({});
   const [loading, setLoading] = useState(false);

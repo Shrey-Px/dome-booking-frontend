@@ -46,7 +46,7 @@ const BookingPortal = () => {
   // Initialize payment data when facility loads
   useEffect(() => {
     if (facility) {
-      const pricing = calculateBookingPrice(facility, 60, 0);
+      const pricing = calculateBookingPrice(facility, 60, 0, null, 'Badminton');
       setPaymentData(pricing);
     }
   }, [facility]);
@@ -64,7 +64,7 @@ const BookingPortal = () => {
     setSelectedDate(slotData.date);
     
     // Calculate initial pricing for selected slot
-    const pricing = calculateBookingPrice(facility, 60, 0, slotData.court?.id);
+    const pricing = calculateBookingPrice(facility, 60, 0, slotData.court?.id, slotData.court?.sport);
     setPaymentData(pricing);
 
     setCurrentStep(2);

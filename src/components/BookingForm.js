@@ -98,7 +98,7 @@ const BookingForm = ({
         const discountAmount = discountData.discountAmount;
       
         // Use the centralized pricing utility
-        const updatedPricing = calculateBookingPrice(facility, 60, discountAmount, courtToUse?.id);
+        const updatedPricing = calculateBookingPrice(facility, 60, discountAmount, courtToUse?.id, courtToUse?.sport);
 
         console.log('Updated pricing:', updatedPricing);
 

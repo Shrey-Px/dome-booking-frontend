@@ -8,24 +8,30 @@
  * @param {number} discountAmount - Discount amount in dollars (default: 0)
  * @returns {Object} Price breakdown with all components
  */
-export const calculateBookingPrice = (facility, duration = 60, discountAmount = 0, courtId = null) => {
+export const calculateBookingPrice = (facility, duration = 60, discountAmount = 0, courtId = null, sport = null) => {
   if (!facility || !facility.pricing) {
     throw new Error('Facility pricing configuration is required');
   }
 
-  // Get court-specific pricing if courtId provided
-  let courtRental = facility.pricing.courtRental; // Default facility price
-
-  console.log('Calculating price for courtId:', courtId); // DEBUG
+  // Determine court rental price based on sport type
+  let courtRental = facility.pricing.courtRental; // Default $25 (Badminton)
   
+  // First try to get sport from courtId
   if (courtId && facility.courts) {
     const court = facility.courts.find(c => c.id === courtId);
-    console.log('Found court:', court); // DEBUG
-    if (court && court.pricing) {
-      courtRental = court.pricing.courtRental;
-      console.log('Using court-specific price:', courtRental); // DEBUG
+    if (court && court.sport) {
+      sport = court.sport;
     }
   }
+  
+  // Apply sport-specific pricing
+  if (sport === 'Pickleball') {
+    courtRental = 30.00;
+  } else if (sport === 'Badminton') {
+    courtRental = 25.00;
+  }
+
+  console.log('Pricing calculation:', { courtId, sport, courtRental });
 
   const { serviceFeePercentage, taxPercentage } = facility.pricing;
 
