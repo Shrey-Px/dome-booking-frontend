@@ -257,21 +257,11 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              {/* Logo - Use imported image */}
-              <img 
-                src="/assets/images/dome-logo.png" 
-                alt="DOME Logo" 
-                className="h-10 w-auto"
-                onError={(e) => {
-                  // Fallback if image doesn't load
-                  e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'flex';
-                }}
-              />
-              <div className="flex items-center" style={{ display: 'none' }}>
-                <div className="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center mr-3">
-                  <span className="text-white font-bold text-xl">D</span>
-                </div>
+              {/* Logo - Match Calendar View Exactly */}
+              <div className="flex items-center">
+                <svg className="w-10 h-10 text-red-500 mr-2" viewBox="0 0 100 100" fill="currentColor">
+                  <polygon points="20,80 50,20 80,80" />
+                </svg>
                 <div>
                   <div className="text-xl font-bold">
                     D<span className="text-red-500">O</span>ME
@@ -280,7 +270,7 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
                 </div>
               </div>
   
-              {/* View Toggle - Match Calendar View Style */}
+              {/* View Toggle - Match Calendar View Icons Exactly */}
               {onViewModeChange && (
                 <div className="flex bg-gray-700 rounded-lg p-1 ml-4">
                   <button
@@ -292,7 +282,10 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
                     }`}
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <line x1="16" y1="2" x2="16" y2="6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <line x1="8" y1="2" x2="8" y2="6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <line x1="3" y1="10" x2="21" y2="10" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                     <span>Calendar</span>
                   </button>
@@ -305,7 +298,10 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
                     }`}
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                      <rect x="3" y="3" width="7" height="7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <rect x="14" y="3" width="7" height="7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <rect x="14" y="14" width="7" height="7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <rect x="3" y="14" width="7" height="7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                     <span>Layout</span>
                   </button>
@@ -354,6 +350,15 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
             </div>
           </div>
   
+          {/* Date Display Below */}
+          <div className="mt-4 text-center">
+            <h2 className="text-2xl font-bold">{formatDate(selectedDate)}</h2>
+            <p className="text-sm text-gray-300 mt-1">
+              22 Badminton Courts • 2 Pickleball Courts
+            </p>
+          </div>
+        </div>
+      </div>  
           {/* Date Display Below */}
           <div className="mt-4 text-center">
             <h2 className="text-2xl font-bold">{formatDate(selectedDate)}</h2>
