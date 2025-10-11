@@ -53,6 +53,22 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
 
   const timeSlots = getTimeSlots();
 
+  // Add this style block at the top of CalendarView.js
+  const scrollHintStyles = `
+    @keyframes bounce-right {
+      0%, 100% {
+        transform: translateX(0);
+      }
+      50% {
+        transform: translateX(5px);
+      }
+    }
+  
+    .scroll-hint {
+      animation: bounce-right 2s infinite;
+    }
+  `;
+
   // Mobile detection
   useEffect(() => {
     const handleResize = () => {
@@ -770,6 +786,24 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
         </div>
       )}
 
+      // Then in the return, add before the calendar grid:
+      <style>{scrollHintStyles}</style>
+
+      {/* Scroll Indicator */}
+      <div 
+        className="absolute right-2 top-1/2 transform -translate-y-1/2 z-30 scroll-hint"
+        style={{
+          backgroundColor: 'rgba(55, 65, 81, 0.9)',
+          color: 'white',
+    	  padding: '12px 8px',
+    	  borderRadius: '8px',
+    	  boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+    	  pointerEvents: 'none'
+  	}}
+      >
+        <div style={{ fontSize: '20px', lineHeight: '1' }}>▶</div>
+      </div>
+
       {/* Main Content - Conditional Rendering */}
       {isMobile ? (
         <MobileCourtView />
@@ -855,7 +889,8 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
                     <span 
                       className="inline-block w-2 h-2 rounded-full mr-2"
                       style={{ 
-                        backgroundColor: isCourtFullyBooked(court.id) ? '#EF4444' : '#4ADE80' 
+                        backgroundColor: isCourtFullyBooked(court.id) ? '#EF4444' :
+                                        court.sport === 'Pickleball' ? '#3B82F6' : '#4ADE80' 
                       }}
                     ></span>
                     {court.sport}
@@ -927,7 +962,7 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
                               className="font-semibold mb-1"
                               style={{ 
                                 fontSize: '12px',
-                                color: '#059669'
+                                color: court.sport === 'Pickleball' ? '#3B82F6' : '#059669'
                               }}
                             >
                               AVAILABLE
@@ -938,7 +973,7 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
                                 color: '#6B7280'
                               }}
                             >
-                              ${facility?.pricing?.courtRental || 25}/hour
+                              ${court.sport === 'Pickleball' ? '30' : '25'}/hour
                             </div>
                           </div>
                         ) : (

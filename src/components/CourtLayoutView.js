@@ -257,8 +257,18 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              {/* Logo */}
-              <div className="flex items-center">
+              {/* Logo - Use imported image */}
+              <img 
+                src="/assets/images/dome-logo.png" 
+                alt="DOME Logo" 
+                className="h-10 w-auto"
+                onError={(e) => {
+                  // Fallback if image doesn't load
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'flex';
+                }}
+              />
+              <div className="flex items-center" style={{ display: 'none' }}>
                 <div className="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center mr-3">
                   <span className="text-white font-bold text-xl">D</span>
                 </div>
@@ -270,61 +280,67 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
                 </div>
               </div>
   
-              {/* View Toggle */}
+              {/* View Toggle - Match Calendar View Style */}
               {onViewModeChange && (
-                <div className="flex bg-gray-700 rounded-lg p-1 ml-6">
+                <div className="flex bg-gray-700 rounded-lg p-1 ml-4">
                   <button
                     onClick={() => onViewModeChange('calendar')}
-                    className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
-                      viewMode === 'calendar' 
-                        ? 'bg-white text-gray-900 shadow-sm' 
-                        : 'text-gray-300 hover:text-white hover:bg-gray-600'
+                    className={`flex items-center space-x-2 px-4 py-2 rounded text-sm font-medium transition-colors ${
+                      viewMode === 'calendar'
+                        ? 'bg-white text-gray-900'
+                        : 'text-white hover:bg-gray-600'
                     }`}
                   >
-                    Calendar
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span>Calendar</span>
                   </button>
                   <button
                     onClick={() => onViewModeChange('layout')}
-                    className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
-                      viewMode === 'layout' 
-                        ? 'bg-white text-gray-900 shadow-sm' 
-                        : 'text-gray-300 hover:text-white hover:bg-gray-600'
+                    className={`flex items-center space-x-2 px-4 py-2 rounded text-sm font-medium transition-colors ${
+                      viewMode === 'layout'
+                        ? 'bg-white text-gray-900'
+                        : 'text-white hover:bg-gray-600'
                     }`}
                   >
-                    Layout
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                    </svg>
+                    <span>Layout</span>
                   </button>
                 </div>
               )}
   
               {/* Facility Name */}
-              <div className="text-lg font-semibold ml-6">
-                {facility?.name || 'Vision Badminton Centre'}
+              <div className="text-lg font-semibold ml-4">
+                Vision Badminton Centre
               </div>
             </div>
   
-            {/* Date Navigation - Right Side */}
+            {/* Date Navigation */}
             <div className="flex items-center space-x-3">
               <button
                 onClick={() => changeDate(-1)}
-                className="flex items-center space-x-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded transition-colors"
+                className="flex items-center space-x-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded transition-colors text-sm"
               >
-                <ChevronLeft size={20} />
+                <ChevronLeft size={16} />
                 <span>Previous</span>
               </button>
               
               <button
                 onClick={() => setSelectedDate(new Date())}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded transition-colors font-semibold"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded transition-colors font-semibold text-sm"
               >
                 Today
               </button>
               
               <button
                 onClick={() => changeDate(1)}
-                className="flex items-center space-x-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded transition-colors"
+                className="flex items-center space-x-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded transition-colors text-sm"
               >
                 <span>Next</span>
-                <ChevronRight size={20} />
+                <ChevronRight size={16} />
               </button>
               
               <button
@@ -333,13 +349,13 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
                 className="p-2 bg-gray-700 hover:bg-gray-600 rounded transition-colors"
                 title="Refresh availability"
               >
-                <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
+                <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
               </button>
             </div>
           </div>
   
           {/* Date Display Below */}
-          <div className="mt-3 text-center">
+          <div className="mt-4 text-center">
             <h2 className="text-2xl font-bold">{formatDate(selectedDate)}</h2>
             <p className="text-sm text-gray-300 mt-1">
               22 Badminton Courts • 2 Pickleball Courts
