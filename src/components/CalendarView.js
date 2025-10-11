@@ -1,9 +1,8 @@
 // CalendarView.js - Complete Fixed Version with all functions
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, ChevronDown, Calendar, Clock, User, RefreshCw, List, Grid } from 'lucide-react';
 import { useFacility } from './FacilityLoader';
 import ApiService from '../services/api';
-import React, { useState, useEffect, useRef } from 'react';
 
 const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange, selectedDate, setSelectedDate }) => {
   // Get facility context instead of hardcoding
