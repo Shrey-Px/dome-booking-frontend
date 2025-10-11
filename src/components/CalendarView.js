@@ -786,7 +786,6 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
         </div>
       )}
 
-      // Then in the return, add before the calendar grid:
       <style>{scrollHintStyles}</style>
 
       {/* Scroll Indicator */}
