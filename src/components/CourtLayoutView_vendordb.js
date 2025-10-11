@@ -372,142 +372,110 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header Section */}
-      <div className="bg-gray-800 text-white sticky top-0 z-10 shadow-md" style={{ padding: isMobile ? '12px 16px' : '16px 24px' }}>
-        <div className={`${isMobile ? '' : 'max-w-7xl mx-auto'}`}>
-          {isMobile ? (
-            // Mobile Header
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center space-x-2">
-                  <AppIcon />
-                  <div className="font-bold text-lg">
-                    D<span style={{ color: '#EF4444' }}>O</span>ME
+      <div className="bg-gray-800 text-white sticky top-0 z-20 shadow-lg">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              {/* Logo - Match Calendar View Exactly */}
+              <div className="flex items-center">
+                <svg className="w-10 h-10 text-red-500 mr-2" viewBox="0 0 100 100" fill="currentColor">
+                  <polygon points="20,80 50,20 80,80" />
+                </svg>
+                <div>
+                  <div className="text-xl font-bold">
+                    D<span className="text-red-500">O</span>ME
                   </div>
+                  <div className="text-xs text-gray-300">Sports Booking</div>
                 </div>
-                {onViewModeChange && (
-                  <button onClick={() => onViewModeChange('calendar')} className="p-2 bg-gray-700 rounded">
-                    <List size={16} />
-                  </button>
-                )}
               </div>
-              
-              <div className="flex items-center justify-between">
-                <button onClick={() => changeDate(-1)} className="p-2 bg-gray-700 rounded">
-                  <ChevronLeft size={16} />
-                </button>
-                <button onClick={() => setShowDatePicker(!showDatePicker)} className="flex-1 mx-2 px-3 py-2 bg-gray-700 rounded text-sm">
-                  {formatDateMobile(selectedDate)}
-                </button>
-                <button onClick={() => changeDate(1)} className="p-2 bg-gray-700 rounded">
-                  <ChevronRight size={16} />
-                </button>
-                <button onClick={loadAvailability} disabled={loading} className="p-2 bg-gray-700 rounded ml-2">
-                  <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
-                </button>
+  
+              {/* View Toggle - Match Calendar View Icons Exactly */}
+              {onViewModeChange && (
+                <div className="flex bg-gray-700 rounded-lg p-1 ml-4">
+                  <button
+                    onClick={() => onViewModeChange('calendar')}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded text-sm font-medium transition-colors ${
+                      viewMode === 'calendar'
+                        ? 'bg-white text-gray-900'
+                        : 'text-white hover:bg-gray-600'
+                    }`}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <line x1="16" y1="2" x2="16" y2="6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <line x1="8" y1="2" x2="8" y2="6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <line x1="3" y1="10" x2="21" y2="10" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span>Calendar</span>
+                  </button>
+                  <button
+                    onClick={() => onViewModeChange('layout')}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded text-sm font-medium transition-colors ${
+                      viewMode === 'layout'
+                        ? 'bg-white text-gray-900'
+                        : 'text-white hover:bg-gray-600'
+                    }`}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <rect x="3" y="3" width="7" height="7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <rect x="14" y="3" width="7" height="7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <rect x="14" y="14" width="7" height="7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <rect x="3" y="14" width="7" height="7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span>Layout</span>
+                  </button>
+                </div>
+              )}
+  
+              {/* Facility Name */}
+              <div className="text-lg font-semibold ml-4">
+                Vision Badminton Centre
               </div>
             </div>
-          ) : (
-            // Desktop Header
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <AppIcon />
-                <h1 className="text-xl font-bold">{facility.name}</h1>
-                
-                {onViewModeChange && (
-                  <div className="flex bg-gray-700 rounded-lg p-1">
-                    <button
-                      onClick={() => onViewModeChange('calendar')}
-                      className={`flex items-center space-x-2 px-3 py-1.5 rounded text-sm ${
-                        viewMode === 'calendar' ? 'bg-white text-gray-900' : 'text-gray-300 hover:text-white'
-                      }`}
-                    >
-                      <List size={14} />
-                      <span>Calendar</span>
-                    </button>
-                    <button
-                      onClick={() => onViewModeChange('layout')}
-                      className={`flex items-center space-x-2 px-3 py-1.5 rounded text-sm ${
-                        viewMode === 'layout' ? 'bg-white text-gray-900' : 'text-gray-300 hover:text-white'
-                      }`}
-                    >
-                      <Grid size={14} />
-                      <span>Layout</span>
-                    </button>
-                  </div>
-                )}
-
-                <div className="date-picker-container relative">
-                  <button
-                    onClick={() => setShowDatePicker(!showDatePicker)}
-                    className="flex items-center space-x-2 px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600"
-                  >
-                    <Calendar size={16} />
-                    <span className="text-sm">{formatDateShort(selectedDate)}</span>
-                    <ChevronDown size={16} />
-                  </button>
-
-                  {showDatePicker && (
-                    <div className="absolute top-full left-0 mt-2 bg-white rounded-lg shadow-xl border z-50" style={{ width: '320px' }}>
-                      <div className="p-4">
-                        <div className="flex items-center justify-between mb-4">
-                          <button onClick={() => changeCalendarMonth(-1)} className="p-1 rounded hover:bg-gray-100">
-                            <ChevronLeft size={20} className="text-gray-600" />
-                          </button>
-                          <h3 className="font-semibold text-gray-900">
-                            {calendarDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                          </h3>
-                          <button onClick={() => changeCalendarMonth(1)} className="p-1 rounded hover:bg-gray-100">
-                            <ChevronRight size={20} className="text-gray-600" />
-                          </button>
-                        </div>
-
-                        <div className="grid grid-cols-7 gap-1 mb-2">
-                          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                            <div key={day} className="text-center text-xs font-medium text-gray-500 py-2">{day}</div>
-                          ))}
-                        </div>
-
-                        <div className="grid grid-cols-7 gap-1">
-                          {generateCalendarGrid().map((dayData, index) => (
-                            <button
-                              key={index}
-                              onClick={() => !dayData.isPast && handleDateSelect(dayData.date)}
-                              disabled={dayData.isPast}
-                              className={`h-8 w-8 text-sm rounded-md transition-colors ${
-                                dayData.isSelected ? 'bg-red-500 text-white' :
-                                dayData.isToday ? 'bg-blue-100 text-blue-600 hover:bg-blue-200' :
-                                dayData.isPast ? 'text-gray-300 cursor-not-allowed' :
-                                dayData.isCurrentMonth ? 'text-gray-900 hover:bg-gray-100' :
-                                'text-gray-400 hover:bg-gray-50'
-                              }`}
-                            >
-                              {dayData.day}
-                            </button>
-                          ))}
-                        </div>
-
-                        <div className="mt-4 pt-3 border-t">
-                          <button onClick={() => handleDateSelect(new Date())} className="text-sm text-blue-600 hover:text-blue-800">
-                            Go to Today
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
+  
+            {/* Date Navigation */}
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={() => changeDate(-1)}
+                className="flex items-center space-x-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded transition-colors text-sm"
+              >
+                <ChevronLeft size={16} />
+                <span>Previous</span>
+              </button>
               
-              <button onClick={loadAvailability} disabled={loading} className="p-2 rounded hover:bg-gray-700 transition-colors">
-                <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
+              <button
+                onClick={() => setSelectedDate(new Date())}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded transition-colors font-semibold text-sm"
+              >
+                Today
+              </button>
+              
+              <button
+                onClick={() => changeDate(1)}
+                className="flex items-center space-x-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded transition-colors text-sm"
+              >
+                <span>Next</span>
+                <ChevronRight size={16} />
+              </button>
+              
+              <button
+                onClick={loadAvailability}
+                disabled={loading}
+                className="p-2 bg-gray-700 hover:bg-gray-600 rounded transition-colors"
+                title="Refresh availability"
+              >
+                <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
               </button>
             </div>
-          )}
-          
-          {!isMobile && (
-            <div className="text-sm text-gray-300 mt-2">
-              {courts.length} courts • ${facility.pricing?.courtRental || '25'}/hour • {formatCurrentTime()}
-            </div>
-          )}
+          </div>
+  
+          {/* Date Display Below */}
+          <div className="mt-4 text-center">
+            <h2 className="text-2xl font-bold">{formatDate(selectedDate)}</h2>
+            <p className="text-sm text-gray-300 mt-1">
+              22 Badminton Courts • 2 Pickleball Courts
+            </p>
+          </div>
         </div>
       </div>
 
@@ -526,7 +494,7 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
             const status = getCourtStatus(court);
             const availableTimes = getAvailableTimesForCourt(court);
             
-            return (
+            return (	
               <div
                 key={court.id}
                 className="cursor-pointer transform transition-all hover:scale-105 hover:shadow-lg"

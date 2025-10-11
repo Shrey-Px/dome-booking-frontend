@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, ChevronDown, Calendar, Clock, User, RefreshCw, List, Grid } from 'lucide-react';
 import { useFacility } from './FacilityLoader';
 import ApiService from '../services/api';
+import React, { useState, useEffect, useRef } from 'react';
 
 const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange, selectedDate, setSelectedDate }) => {
   // Get facility context instead of hardcoding
@@ -10,6 +11,8 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
   
   const [availability, setAvailability] = useState({});
   const [loading, setLoading] = useState(false);
+  const [showScrollArrow, setShowScrollArrow] = useState(true);
+  const calendarRef = useRef(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(null);
   const [error, setError] = useState(null);
@@ -53,21 +56,17 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
 
   const timeSlots = getTimeSlots();
 
-  // Add this style block at the top of CalendarView.js
-  const scrollHintStyles = `
-    @keyframes bounce-right {
-      0%, 100% {
-        transform: translateX(0);
-      }
-      50% {
-        transform: translateX(5px);
-      }
+  const handleScroll = (e) => {
+    const element = e.target;
+    const isAtEnd = element.scrollLeft + element.clientWidth >= element.scrollWidth - 10;
+    setShowScrollArrow(!isAtEnd);
+  };
+
+  const scrollRight = () => {
+    if (calendarRef.current) {
+      calendarRef.current.scrollBy({ left: 300, behavior: 'smooth' });
     }
-  
-    .scroll-hint {
-      animation: bounce-right 2s infinite;
-    }
-  `;
+  };
 
   // Mobile detection
   useEffect(() => {
@@ -786,35 +785,37 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
         </div>
       )}
 
-      <style>{scrollHintStyles}</style>
-
-      {/* Scroll Indicator */}
-      <div 
-        className="absolute right-2 top-1/2 transform -translate-y-1/2 z-30 scroll-hint"
-        style={{
-          backgroundColor: 'rgba(55, 65, 81, 0.9)',
-          color: 'white',
-    	  padding: '12px 8px',
-    	  borderRadius: '8px',
-    	  boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-    	  pointerEvents: 'none'
-  	}}
-      >
-        <div style={{ fontSize: '20px', lineHeight: '1' }}>▶</div>
-      </div>
-
       {/* Main Content - Conditional Rendering */}
       {isMobile ? (
         <MobileCourtView />
       ) : (
         // Desktop Calendar Grid
-        <div className="max-w-7xl mx-auto" style={{ padding: '24px' }}>
+        <div className="max-w-7xl mx-auto relative" style={{ padding: '24px' }}>
+  	  {/* Clickable Scroll Arrow */}
+  	  {showScrollArrow && (
+    	    <button
+      	      onClick={scrollRight}
+      	      className="absolute right-6 top-1/2 transform -translate-y-1/2 z-30 bg-gray-800 hover:bg-gray-700 text-white p-3 rounded-lg shadow-xl transition-all hover:scale-110"
+              style={{ marginTop: '-24px' }}
+      	      title="Scroll to see more courts"
+    	    > 
+      	      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
+      	      </svg>
+    	    </button>
+  	  )}
+
           <div 
-            className="rounded-xl overflow-x-auto relative"
-            style={{ 
-      	      maxWidth: '100%'
-    	    }}
-          > 
+    	    ref={calendarRef}
+    	    onScroll={handleScroll}
+    	    className="rounded-xl overflow-x-auto relative"
+    	    style={{ 
+      	      backgroundColor: '#FFFFFF',
+      	      boxShadow: '0 10px 15px rgba(0, 0, 0, 0.1)',
+      	      border: '1px solid #F3F4F6'
+            }}
+          >
+
   	  <div 
     	    className="relative"
     	    style={{ 

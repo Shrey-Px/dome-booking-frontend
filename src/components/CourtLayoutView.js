@@ -445,8 +445,8 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
               </div>
             </div>
 
-	    {/* Pickleball Courts - Horizontal Layout */}
-	    <div className="grid grid-cols-2 gap-6 max-w-3xl mx-auto">
+	    {/* Pickleball Courts - Vertical Stack (2 rows, 1 column) */}
+	    <div className="grid grid-cols-1 gap-6 max-w-sm mx-auto">
   	      {renderPickleballCourt('Court P1')}
   	      {renderPickleballCourt('Court P2')}
 	    </div>
