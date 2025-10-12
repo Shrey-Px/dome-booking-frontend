@@ -8,6 +8,8 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
   const { facility, facilitySlug } = useFacility();
   const [availability, setAvailability] = useState({});
   const [loading, setLoading] = useState(false);
+  const headerRef = React.useRef(null);
+  const [headerHeight, setHeaderHeight] = useState(0);
 
   // Mobile detection (same logic as CalendarView)
   const [isMobile, setIsMobile] = useState(
