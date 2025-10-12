@@ -316,8 +316,7 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
               {/* Row 1: Logo + Brand + (optional) view toggle */}
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-2">
-                  {/* App Icon (simple) */}
-                  <div className="w-6 h-6 rounded-lg bg-red-500 text-white font-bold flex items-center justify-center">D</div>
+                  <AppIcon isMobile />
                   <div className="font-bold text-lg">
                     D<span style={{ color: '#EF4444' }}>O</span>ME
                   </div>
@@ -359,10 +358,11 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
           ) : (
             // Desktop layout
             <div className="flex items-center justify-between">
+              {/* LEFT: icon, toggles, date, refresh */}
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-3">
                   <AppIcon />
-  
+
                   {onViewModeChange && (
                     <div className="flex bg-gray-700 rounded-lg p-1 ml-2">
                       <button
@@ -389,7 +389,7 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
                       </button>
                     </div>
                   )}
-  
+
                   {/* Date display + arrows */}
                   <div
                     className="flex items-center space-x-2 px-4 py-2 rounded-lg border"
@@ -411,7 +411,7 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
                       <ChevronRight size={16} />
                     </button>
                   </div>
-  
+
                   <button
                     onClick={loadAvailability}
                     className="p-2 rounded hover:bg-gray-700"
@@ -420,13 +420,14 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
                     <RefreshCw size={16} />
                   </button>
                 </div>
-  
-                <div
-                  className="font-bold"
-                  style={{ fontSize: '24px', letterSpacing: '0.05em' }}
-                >
-                  D<span style={{ color: '#EF4444' }}>O</span>ME
-                </div>
+              </div>
+
+              {/* RIGHT: brand (now truly right-aligned) */}
+              <div
+                className="font-bold"
+                style={{ fontSize: '24px', letterSpacing: '0.05em' }}
+              >
+                D<span style={{ color: '#EF4444' }}>O</span>ME
               </div>
             </div>
           )}
