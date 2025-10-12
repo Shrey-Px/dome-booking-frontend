@@ -386,7 +386,7 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
       {/* Facility Name Bar */}
       {!isMobile && (
         <div className="max-w-7xl mx-auto px-6 py-4 bg-white border-b">
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-gray-900 text-left">
             Vision Badminton Centre
           </h1>
         </div>
@@ -502,9 +502,6 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
                 <div className="space-y-2 text-sm text-gray-600">
                   <div>Weekdays: 8:00 AM - 8:00 PM</div>
                   <div>Weekends: 6:00 AM - 10:00 PM</div>
-                  <div className="mt-3 text-xs text-gray-500">
-                    + 1% service fee + 13% tax
-                  </div>
                 </div>
               </div>
             </div>

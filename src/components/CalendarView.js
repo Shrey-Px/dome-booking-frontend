@@ -163,7 +163,7 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
       year: 'numeric', 
       month: 'long', 
       day: 'numeric' 
-    }).toUpperCase();
+    });
   };
 
   const formatDateShort = (date) => {
@@ -753,7 +753,7 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
       {/* Facility Name Bar */}
       {!isMobile && (
         <div className="max-w-7xl mx-auto px-6 py-4 bg-white border-b">
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-gray-900 text-left">
             Vision Badminton Centre
           </h1>
         </div>
