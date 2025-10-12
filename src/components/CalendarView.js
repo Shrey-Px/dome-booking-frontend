@@ -631,7 +631,7 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
                         className="font-medium px-3 min-w-[200px] text-center"
                         style={{ fontSize: '14px' }}
                       >
-                        {formatDateShort(selectedDate)}
+                        {formatDate(selectedDate)}
                       </span>
                       <button 
                         onClick={(e) => {
@@ -750,27 +750,12 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
         </div>
       </div>
 
-      {/* Status Bar - Mobile Responsive */}
+      {/* Facility Name Bar */}
       {!isMobile && (
-        <div className="max-w-7xl mx-auto px-6 py-3 bg-white border-b">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-xl font-semibold text-gray-900">
-                {formatDate(selectedDate)}
-              </h1>
-              <div className="text-sm text-gray-500 flex items-center space-x-4">
-                <span>{getAvailableSlotsCount()} slots available</span>
-                <span>Current time: {formatCurrentTime()}</span>
-                {lastRefresh && <span>Last updated: {lastRefresh.toLocaleTimeString()}</span>}
-                {error && <span className="text-red-500">Error: {error}</span>}
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-sm text-gray-500">
-                {Object.keys(availability).length} courts loaded
-              </div>
-            </div>
-          </div>
+        <div className="max-w-7xl mx-auto px-6 py-4 bg-white border-b">
+          <h1 className="text-2xl font-bold text-gray-900">
+            Vision Badminton Centre
+          </h1>
         </div>
       )}
 
