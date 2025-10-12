@@ -15,6 +15,13 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
   );
 
   useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    onResize();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  useEffect(() => {
     if (facilitySlug) {
       loadAvailability();
     }
@@ -288,98 +295,139 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 overflow-hidden">
       {/* Fixed Header */}
-      {/* Header - Match Calendar View Exactly */}
-      <div 
-        className="text-white sticky top-0 z-20"
-        style={{ 
+      {/* Header - Mobile Responsive (same pattern as CalendarView) */}
+      <div
+        ref={headerRef}
+        className="text-white sticky top-0 z-10"
+        style={{
           backgroundColor: '#1E293B',
-          padding: '16px 24px',
+          padding: isMobile ? '12px 16px' : '16px 24px',
           boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
         }}
       >
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3">
-                <AppIcon />
-                
-                {onViewModeChange && (
-                  <div className="flex bg-gray-700 rounded-lg p-1 ml-2">
-                    <button
-                      onClick={() => onViewModeChange('calendar')}
-                      className={`flex items-center space-x-2 px-3 py-1.5 rounded transition-colors text-sm font-medium ${
-                        viewMode === 'calendar' 
-                          ? 'bg-white text-gray-900 shadow-sm' 
-                          : 'text-gray-300 hover:text-white hover:bg-gray-600'
-                      }`}
-                    >
-                      <List size={14} />
-                      <span>Calendar</span>
-                    </button>
-                    <button
-                      onClick={() => onViewModeChange('layout')}
-                      className={`flex items-center space-x-2 px-3 py-1.5 rounded transition-colors text-sm font-medium ${
-                        viewMode === 'layout' 
-                          ? 'bg-white text-gray-900 shadow-sm' 
-                          : 'text-gray-300 hover:text-white hover:bg-gray-600'
-                      }`}
-                    >
-                      <Grid size={14} />
-                      <span>Layout</span>
-                    </button>
+        <div className={`${isMobile ? '' : 'max-w-7xl mx-auto'}`}>
+          {isMobile ? (
+            // Mobile layout
+            <div>
+              {/* Row 1: Logo + Brand + (optional) view toggle */}
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-2">
+                  {/* App Icon (simple) */}
+                  <div className="w-6 h-6 rounded-lg bg-red-500 text-white font-bold flex items-center justify-center">D</div>
+                  <div className="font-bold text-lg">
+                    D<span style={{ color: '#EF4444' }}>O</span>ME
                   </div>
-                )}
-                
-                {/* Date Display with Navigation */}
-                <div className="flex items-center space-x-2 px-4 py-2 rounded-lg border" style={{ 
-                  backgroundColor: '#334155',
-                  borderColor: '#475569'
-                }}>
-                  <Calendar size={16} style={{ color: '#94A3B8' }} />
-                  <button 
-                    onClick={() => changeDate(-1)}
-                    className="p-1 rounded transition-colors hover:bg-gray-600"
-                  >
-                    <ChevronLeft size={16} />
-                  </button>
-                  <span 
-                    className="font-medium px-3 min-w-[200px] text-center"
-                    style={{ fontSize: '14px' }}
-                  >
-                    {formatDate(selectedDate)}
-                  </span>
-                  <button 
-                    onClick={() => changeDate(1)}
-                    className="p-1 rounded transition-colors hover:bg-gray-600"
-                  >
-                    <ChevronRight size={16} />
-                  </button>
                 </div>
+                {onViewModeChange && (
+                  <button
+                    onClick={() => onViewModeChange('layout')}
+                    className="p-2 bg-gray-700 rounded"
+                    title="Layout view"
+                  >
+                    <Grid size={16} />
+                  </button>
+                )}
+              </div>
+  
+              {/* Row 2: Date nav + refresh */}
+              <div className="flex items-center justify-between">
+                <button onClick={() => changeDate(-1)} className="p-2 bg-gray-700 rounded">
+                  <ChevronLeft size={16} />
+                </button>
+  
+                <div className="flex-1 mx-2 px-3 py-2 bg-gray-700 rounded text-sm text-center">
+                  {selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </div>
+  
+                <button onClick={() => changeDate(1)} className="p-2 bg-gray-700 rounded">
+                  <ChevronRight size={16} />
+                </button>
   
                 <button
                   onClick={loadAvailability}
-                  disabled={loading}
-                  className="p-2 rounded transition-colors hover:bg-gray-700"
+                  className="p-2 bg-gray-700 rounded ml-2"
                   title="Refresh availability"
                 >
-                  <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+                  <RefreshCw size={16} />
                 </button>
               </div>
             </div>
+          ) : (
+            // Desktop layout
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded-lg bg-red-500 text-white font-bold flex items-center justify-center">D</div>
   
-            {/* Right Side - DOME Brand */}
-            <div 
-              className="font-bold"
-              style={{ 
-                fontSize: '24px',
-                letterSpacing: '0.05em'
-              }}
-            >
-              D<span style={{ color: '#EF4444' }}>O</span>ME
+                  {onViewModeChange && (
+                    <div className="flex bg-gray-700 rounded-lg p-1 ml-2">
+                      <button
+                        onClick={() => onViewModeChange('calendar')}
+                        className={`flex items-center space-x-2 px-3 py-1.5 rounded text-sm font-medium ${
+                          viewMode === 'calendar'
+                            ? 'bg-white text-gray-900 shadow-sm'
+                            : 'text-gray-300 hover:text-white hover:bg-gray-600'
+                        }`}
+                      >
+                        <List size={14} />
+                        <span>Calendar</span>
+                      </button>
+                      <button
+                        onClick={() => onViewModeChange('layout')}
+                        className={`flex items-center space-x-2 px-3 py-1.5 rounded text-sm font-medium ${
+                          viewMode === 'layout'
+                            ? 'bg-white text-gray-900 shadow-sm'
+                            : 'text-gray-300 hover:text-white hover:bg-gray-600'
+                        }`}
+                      >
+                        <Grid size={14} />
+                        <span>Layout</span>
+                      </button>
+                    </div>
+                  )}
+  
+                  {/* Date display + arrows */}
+                  <div
+                    className="flex items-center space-x-2 px-4 py-2 rounded-lg border"
+                    style={{ backgroundColor: '#334155', borderColor: '#475569' }}
+                  >
+                    <Calendar size={16} style={{ color: '#94A3B8' }} />
+                    <button onClick={() => changeDate(-1)} className="p-1 rounded hover:bg-gray-600">
+                      <ChevronLeft size={16} />
+                    </button>
+                    <span className="font-medium px-3 min-w-[200px] text-center" style={{ fontSize: '14px' }}>
+                      {selectedDate.toLocaleDateString('en-US', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </span>
+                    <button onClick={() => changeDate(1)} className="p-1 rounded hover:bg-gray-600">
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+  
+                  <button
+                    onClick={loadAvailability}
+                    className="p-2 rounded hover:bg-gray-700"
+                    title="Refresh availability"
+                  >
+                    <RefreshCw size={16} />
+                  </button>
+                </div>
+  
+                <div
+                  className="font-bold"
+                  style={{ fontSize: '24px', letterSpacing: '0.05em' }}
+                >
+                  D<span style={{ color: '#EF4444' }}>O</span>ME
+                </div>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -393,7 +441,7 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
       )}
 
       {/* Scrollable Content */}
-      <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 100px)' }}>
+      <div className="overflow-y-auto" style={{ height: 'calc(100vh - 100px)' }}>
         <div className="max-w-7xl mx-auto px-6 py-8">
           
           {/* Badminton Courts Section */}

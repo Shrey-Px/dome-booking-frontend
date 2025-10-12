@@ -19,6 +19,8 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [selectedMobileCourt, setSelectedMobileCourt] = useState(null);
+  const headerRef = React.useRef(null);
+  const [headerHeight, setHeaderHeight] = useState(0);
   
   // Get courts from facility instead of hardcoding
   const courts = facility?.courts?.map(court => ({
@@ -66,6 +68,15 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
       calendarRef.current.scrollBy({ left: 300, behavior: 'smooth' });
     }
   };
+
+  useEffect(() => {
+    const update = () => {
+      if (headerRef.current) setHeaderHeight(headerRef.current.clientHeight);
+    };
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
 
   // Mobile detection
   useEffect(() => {
@@ -509,9 +520,10 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
 
   // Main Render
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#F9FAFB' }}>
+    <div className="h-screen overflow-hidden" style={{ backgroundColor: '#F9FAFB' }}>
       {/* Header - Mobile Responsive */}
-      <div 
+      <div
+        ref={headerRef}
         className="text-white sticky top-0 z-10"
         style={{ 
           backgroundColor: '#1E293B',
@@ -758,6 +770,12 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
           </h1>
         </div>
       )}
+
+      {/* Scrollable Content */}
+      <div
+        className="overflow-y-auto"
+  	style={{ height: `calc(100vh - ${headerHeight}px)` }}
+      >
 
       {/* Mobile Status */}
       {isMobile && (
