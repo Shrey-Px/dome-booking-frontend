@@ -1,6 +1,6 @@
 // src/components/CourtLayoutView.js - Vision Badminton Exact Layout
 import React, { useState, useEffect } from 'react';
-import { Calendar, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, RefreshCw, ChevronLeft, ChevronRight, List, Grid } from 'lucide-react';
 import { useFacility } from './FacilityLoader';
 import ApiService from '../services/api';
 
@@ -9,11 +9,22 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
   const [availability, setAvailability] = useState({});
   const [loading, setLoading] = useState(false);
 
+  // Mobile detection (same logic as CalendarView)
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' ? window.innerWidth < 768 : false
+  );
+
   useEffect(() => {
     if (facilitySlug) {
       loadAvailability();
     }
   }, [selectedDate, facilitySlug]);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const loadAvailability = async () => {
     setLoading(true);
