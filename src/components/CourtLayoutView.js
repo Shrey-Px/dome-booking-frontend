@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, RefreshCw, ChevronLeft, ChevronRight, List, Grid } from 'lucide-react';
 import { useFacility } from './FacilityLoader';
 import ApiService from '../services/api';
+import appIcon from '../assets/images/app-icon.png';
 
 const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewMode, onViewModeChange }) => {
   const { facility, facilitySlug } = useFacility();
@@ -55,12 +56,12 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
   const AppIcon = ({ isMobile = false }) => (
     <div className="w-6 h-6 md:w-8 md:h-8 flex items-center justify-center">
       <img 
-        src={require('../assets/images/app-icon.png')}
+        src={appIcon}
         alt="Dome Logo" 
         className="w-6 h-6 md:w-8 md:h-8 object-contain"
         onError={(e) => {
-          e.target.style.display = 'none';
-          e.target.nextSibling.style.display = 'flex';
+          e.currentTarget.style.display = 'none';
+          e.currentTarget.nextSibling.style.display = 'flex';
         }}
       />
       <div 
@@ -297,8 +298,7 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 overflow-hidden">
-      {/* Fixed Header */}
+    <div className="h-screen overflow-hidden" style={{ backgroundColor: '#F9FAFB' }}>
       {/* Header - Mobile Responsive (same pattern as CalendarView) */}
       <div
         ref={headerRef}
@@ -324,9 +324,9 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
                 </div>
                 {onViewModeChange && (
                   <button
-                    onClick={() => onViewModeChange('layout')}
+                    onClick={() => onViewModeChange('calendar')}
                     className="p-2 bg-gray-700 rounded"
-                    title="Layout view"
+                    title="Calendar view"
                   >
                     <Grid size={16} />
                   </button>
