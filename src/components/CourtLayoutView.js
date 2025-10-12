@@ -52,21 +52,21 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
     }
   };
 
-  // App Icon Component - Same as Calendar View
   const AppIcon = ({ isMobile = false }) => (
     <div className="w-6 h-6 md:w-8 md:h-8 flex items-center justify-center">
-      <img 
+      <img
         src={appIcon}
-        alt="Dome Logo" 
+        alt="Dome Logo"
         className="w-6 h-6 md:w-8 md:h-8 object-contain"
         onError={(e) => {
+          // Hide the broken image and show the fallback square “D”
           e.currentTarget.style.display = 'none';
-          e.currentTarget.nextSibling.style.display = 'flex';
+          e.currentTarget.nextElementSibling.style.display = 'flex';
         }}
       />
-      <div 
+      <div
         className="w-6 h-6 md:w-8 md:h-8 rounded-lg flex items-center justify-center font-bold text-white"
-        style={{ 
+        style={{
           backgroundColor: '#EF4444',
           fontSize: isMobile ? '10px' : '12px',
           letterSpacing: '0.5px',
@@ -328,7 +328,7 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
                     className="p-2 bg-gray-700 rounded"
                     title="Calendar view"
                   >
-                    <Grid size={16} />
+                    <List size={16} />
                   </button>
                 )}
               </div>
@@ -361,7 +361,7 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 rounded-lg bg-red-500 text-white font-bold flex items-center justify-center">D</div>
+                  <AppIcon />
   
                   {onViewModeChange && (
                     <div className="flex bg-gray-700 rounded-lg p-1 ml-2">
