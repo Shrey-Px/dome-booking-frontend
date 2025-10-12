@@ -1047,6 +1047,7 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
         </div>
       )}
     </div>
+  </div>
   );
 };
 
