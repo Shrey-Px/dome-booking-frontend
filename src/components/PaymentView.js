@@ -32,6 +32,11 @@ const PaymentView = ({
     }
   });
 
+  // Use facility.id (not _id)
+  const facilityIdToUse = facility.id || facility._id || facility.venueId || facilitySlug;
+
+  console.log('Using facility ID:', facilityIdToUse);
+
   // FIXED: Use finalAmount consistently (same property name as BookingForm sets)
   const totalAmount = paymentData.finalAmount || paymentData.finalTotal;
 
@@ -206,17 +211,6 @@ const PaymentView = ({
   // Single booking creation method after payment success
   const createBookingAfterPayment = async (paymentIntentId) => {
     try {
-      // Validate facility data first
-      if (!facility) {
-        console.error('Facility object is missing');
-        throw new Error('Facility information is required for booking');
-      }
-
-      if (!facility._id && !facility.id) {
-        console.error('Facility ID is missing:', facility);
-        throw new Error('Facility ID is required for booking');
-      }
-
       const duration = selectedSlot.duration || 60;
       const startTime24 = selectedSlot.time24;
       const [startHour, startMin] = startTime24.split(':').map(Number);
@@ -224,37 +218,32 @@ const PaymentView = ({
       const endHour = Math.floor(totalMinutes / 60);
       const endMin = totalMinutes % 60;
       const endTime24 = `${endHour.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`;
-
-      // FIXED: Use local timezone for date formatting
+  
+      // Use local timezone for date formatting
       const year = selectedDate.getFullYear();
       const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
       const day = String(selectedDate.getDate()).padStart(2, '0');
       const bookingDateString = `${year}-${month}-${day}`;
-
+  
       console.log('Booking date (local):', {
         selectedDate: selectedDate.toString(),
         formattedDate: bookingDateString,
         startTime: startTime24,
         endTime: endTime24
       });
-
+  
       console.log('Creating booking with facility info:', {
         facilitySlug,
-        facilityId: facility._id,
-        venueId: facility.venueId
+        facilityId: facility?.id,
+        venueId: facility?.venueId,
+        facilityName: facility?.name
       });
-
-      // Add this BEFORE creating bookingPayload
-        if (!facility || !facility._id) {
-        console.error('Facility object is missing or invalid:', facility);
-        throw new Error('Facility information is required for booking');
-      }
-
+  
       const bookingPayload = {
-        facilitySlug: facilitySlug,  // ← ADD THIS LINE
-        facilityId: facility._id.toString(),
+        facilitySlug: facilitySlug,
+        facilityId: facility.venueId,  // Backend expects the Venue MongoDB ID
         courtNumber: selectedCourt.id,
-        bookingDate: bookingDateString,  // Use local date string
+        bookingDate: bookingDateString,
         startTime: startTime24,
         endTime: endTime24,
         duration: duration,
@@ -267,34 +256,34 @@ const PaymentView = ({
         customerPhone: bookingData.customerPhone,
         userId: bookingData.userId || null
       };
-
-      console.log('Booking payload:', bookingPayload);
-
+  
+      console.log('📦 Booking payload:', bookingPayload);
+  
       // Create booking
       const bookingResult = await ApiService.createBooking(facilitySlug, bookingPayload);
       const bookingId = bookingResult.data?._id || bookingResult._id || bookingResult.id;
-
+  
       if (!bookingId) {
         throw new Error('Booking created but no ID returned');
       }
-
-      console.log('Booking created successfully:', bookingId);
-
+  
+      console.log('✅ Booking created successfully:', bookingId);
+  
       // Confirm payment and trigger email
       await ApiService.confirmPayment({
         bookingId: bookingId,
         paymentIntentId: paymentIntentId
       });
-
-      console.log('Payment confirmed and email sent');
-
+  
+      console.log('✅ Payment confirmed and email sent');
+  
       // Trigger refresh event for calendar/layout views
       window.dispatchEvent(new CustomEvent('bookingCreated', { 
         detail: { bookingId, facilitySlug } 
       }));
-
+  
       onSuccess();
-
+  
     } catch (bookingError) {
       console.error('Failed to create booking after payment:', bookingError);
       setErrors({ 
