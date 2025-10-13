@@ -14,9 +14,6 @@ import { Elements } from '@stripe/react-stripe-js';
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 
 const BookingPortal = () => {
-  // Get facilitySlug from environment variable
-  const facilitySlug = process.env.REACT_APP_FACILITY_SLUG || 'vision-badminton';
-
   const [viewMode, setViewMode] = useState('calendar');
   const { facility, facilitySlug } = useFacility();
 
@@ -226,7 +223,7 @@ const BookingPortal = () => {
                 selectedCourt={selectedCourt}
                 bookingData={bookingData}
                 paymentData={paymentData}
-                onBack={() => setCurrentStep(2)}facili
+                onBack={() => setCurrentStep(2)}
                 onSuccess={handlePaymentSuccess}
                 onReset={resetBooking}
                 success={success}
