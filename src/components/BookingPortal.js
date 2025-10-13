@@ -16,6 +16,13 @@ const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 const BookingPortal = () => {
   const [viewMode, setViewMode] = useState('calendar');
   const { facility, facilitySlug } = useFacility();
+
+  // Add this debug
+  console.log('BookingPortal - facility loaded:', {
+    facility: facility,
+    facilitySlug: facilitySlug,
+    facilityId: facility?._id
+  });
   
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedSlot, setSelectedSlot] = useState(null);

@@ -206,6 +206,17 @@ const PaymentView = ({
   // Single booking creation method after payment success
   const createBookingAfterPayment = async (paymentIntentId) => {
     try {
+      // Validate facility data first
+      if (!facility) {
+        console.error('Facility object is missing');
+        throw new Error('Facility information is required for booking');
+      }
+
+      if (!facility._id && !facility.id) {
+        console.error('Facility ID is missing:', facility);
+        throw new Error('Facility ID is required for booking');
+      }
+
       const duration = selectedSlot.duration || 60;
       const startTime24 = selectedSlot.time24;
       const [startHour, startMin] = startTime24.split(':').map(Number);
@@ -232,6 +243,12 @@ const PaymentView = ({
         facilityId: facility._id,
         venueId: facility.venueId
       });
+
+      // Add this BEFORE creating bookingPayload
+        if (!facility || !facility._id) {
+        console.error('Facility object is missing or invalid:', facility);
+        throw new Error('Facility information is required for booking');
+      }
 
       const bookingPayload = {
         facilitySlug: facilitySlug,  // ← ADD THIS LINE
