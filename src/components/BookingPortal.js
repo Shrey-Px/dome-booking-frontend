@@ -44,11 +44,11 @@ const BookingPortal = () => {
   console.log('BookingPortal render - viewMode:', viewMode, 'currentStep:', currentStep);
 
   // Set facility in API service when it loads
-  useEffect(() => {
-    if (facilitySlug) {
-      ApiService.setFacility(facilitySlug);
-    }
-  }, [facilitySlug]);
+  // useEffect(() => {
+  //  if (facilitySlug) {
+  //    ApiService.setFacility(facilitySlug);
+  //  }
+  // }, [facilitySlug]);
 
   // Initialize payment data when facility loads
   useEffect(() => {
@@ -224,7 +224,7 @@ const BookingPortal = () => {
                 selectedCourt={selectedCourt}
                 bookingData={bookingData}
                 paymentData={paymentData}
-                onBack={() => setCurrentStep(2)}
+                onBack={() => setCurrentStep(2)}facili
                 onSuccess={handlePaymentSuccess}
                 onReset={resetBooking}
                 success={success}
