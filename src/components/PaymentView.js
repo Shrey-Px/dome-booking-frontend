@@ -227,8 +227,15 @@ const PaymentView = ({
         endTime: endTime24
       });
 
+      console.log('Creating booking with facility info:', {
+        facilitySlug,
+        facilityId: facility._id,
+        venueId: facility.venueId
+      });
+
       const bookingPayload = {
-        facilityId: facility.venueId.toString(),
+        facilitySlug: facilitySlug,  // ← ADD THIS LINE
+        facilityId: facility._id.toString(),
         courtNumber: selectedCourt.id,
         bookingDate: bookingDateString,  // Use local date string
         startTime: startTime24,
@@ -244,7 +251,7 @@ const PaymentView = ({
         userId: bookingData.userId || null
       };
 
-      console.log('Creating booking with payload:', bookingPayload);
+      console.log('Booking payload:', bookingPayload);
 
       // Create booking
       const bookingResult = await ApiService.createBooking(facilitySlug, bookingPayload);
