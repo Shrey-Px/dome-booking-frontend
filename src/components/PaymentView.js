@@ -3,9 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { CreditCard, AlertCircle, Loader, CheckCircle } from 'lucide-react';
 import ApiService from '../services/api';
-import { useFacility } from '../context/FacilityContext';
 
 const PaymentView = ({
+  facilitySlug,
   selectedDate,
   selectedSlot,
   selectedCourt,
@@ -18,7 +18,6 @@ const PaymentView = ({
 }) => {
   const stripe = useStripe();
   const elements = useElements();
-  const { facilitySlug } = useFacility();
   
   const [processing, setProcessing] = useState(false);
   const [validating, setValidating] = useState(true);
