@@ -257,10 +257,19 @@ const PaymentView = ({
       console.log('Booking created successfully:', bookingId);
 
       // Confirm payment and trigger email
-      await ApiService.confirmPayment({
-        bookingId: bookingId,
-        paymentIntentId: paymentIntentId
-      });
+      try {
+        console.log('Confirming payment and triggering email...', { bookingId, paymentIntentId });
+  
+        await ApiService.confirmPayment({
+          bookingId: bookingId,
+          paymentIntentId: paymentIntentId
+        });
+  
+        console.log('Payment confirmed and email sent');
+      } catch (confirmError) {
+        console.error('Failed to confirm payment (booking still created):', confirmError);
+        // Don't fail the whole flow - booking is already created
+      }
 
       console.log('Payment confirmed and email sent');
 
