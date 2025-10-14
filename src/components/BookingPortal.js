@@ -217,6 +217,7 @@ const BookingPortal = () => {
           <div className="py-8">
             <div className="max-w-6xl mx-auto px-4">
               <PaymentView
+                facility={facility}              // ✅ ADD THIS LINE
                 facilitySlug={facilitySlug}
                 selectedDate={selectedDate}
                 selectedSlot={selectedSlot}
