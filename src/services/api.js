@@ -206,8 +206,8 @@ class ApiService {
 
   // Booking - Updated to include facility slug
   async createBooking(facilitySlug, bookingData) {
-    // console.log('Creating booking with data:', bookingData);
-    // console.log('Facility slug:', facilitySlug);
+    console.log('Creating booking with data:', bookingData);
+    console.log('Facility slug:', facilitySlug);
     
     const backendBookingData = {
       facilitySlug: facilitySlug, // Add facility slug
@@ -227,9 +227,9 @@ class ApiService {
       source: 'web'
     };
     
-    // console.log('Backend booking payload:', backendBookingData);
+    console.log('📤 Sending to backend:', backendBookingData);
     
-    const result = await this.request('/booking/create-booking', {
+    const result = await this.request('/tenant/booking/create-booking', {
       method: 'POST',
       body: backendBookingData,
     });
