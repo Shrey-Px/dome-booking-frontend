@@ -1,10 +1,11 @@
-// components/PaymentView.js - FIXED: Validate booking before payment
+// components/PaymentView.js - FIXED: Consistent property names for discount
 import React, { useState, useEffect } from 'react';
 import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { CreditCard, AlertCircle, Loader, CheckCircle } from 'lucide-react';
 import ApiService from '../services/api';
 
 const PaymentView = ({
+  facility,
   facilitySlug,
   selectedDate,
   selectedSlot,
@@ -18,9 +19,7 @@ const PaymentView = ({
 }) => {
   const stripe = useStripe();
   const elements = useElements();
-  
   const [processing, setProcessing] = useState(false);
-  const [validating, setValidating] = useState(true);
   const [clientSecret, setClientSecret] = useState('');
   const [errors, setErrors] = useState({});
   const [billingDetails, setBillingDetails] = useState({
@@ -33,62 +32,33 @@ const PaymentView = ({
     }
   });
 
+  // FIXED: Use finalAmount consistently (same property name as BookingForm sets)
   const totalAmount = paymentData.finalAmount || paymentData.finalTotal;
 
-  console.log('PaymentView initialized with facilitySlug:', facilitySlug);
+  console.log('PaymentView received paymentData:', paymentData);
+  console.log('Total amount to charge:', totalAmount);
 
-  // Validate booking availability BEFORE creating payment intent
-  useEffect(() => {
-    const validateBooking = async () => {
-      if (!facilitySlug || success) return;
-      
-      try {
-        setValidating(true);
-        console.log('Validating booking availability before payment...');
-        
-        // Format date
-        const year = selectedDate.getFullYear();
-        const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
-        const day = String(selectedDate.getDate()).padStart(2, '0');
-        const dateStr = `${year}-${month}-${day}`;
-        
-        // Check if slot is still available
-        const availability = await ApiService.getAvailability(facilitySlug, dateStr);
-        const courtAvailability = availability.availability?.[selectedCourt.id];
-        
-        if (!courtAvailability || !courtAvailability[selectedSlot.time24]) {
-          setErrors({ 
-            validation: 'This time slot is no longer available. Please select another slot.' 
-          });
-          setValidating(false);
-          return;
-        }
-        
-        console.log('✅ Slot is available, creating payment intent...');
-        
-        // Create payment intent only after validation
-        const result = await ApiService.createPaymentIntent(
-          Math.round(totalAmount * 100),
-          'cad'
-        );
-        
-        if (result.clientSecret) {
-          setClientSecret(result.clientSecret);
-          setValidating(false);
-        } else {
-          throw new Error('Failed to get payment client secret');
-        }
-      } catch (error) {
-        console.error('Validation or payment intent creation failed:', error);
-        setErrors({ 
-          validation: error.message || 'Unable to process booking. Please try again.' 
-        });
-        setValidating(false);
-      }
-    };
-
-    validateBooking();
-  }, [facilitySlug, selectedDate, selectedSlot, selectedCourt, totalAmount, success]);
+  // Early return if invalid amount - BEFORE any other logic
+  if (!totalAmount || totalAmount <= 0) {
+    console.error('Invalid payment amount:', paymentData);
+    return (
+      <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="text-center py-12">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h3 className="text-xl font-bold text-gray-900 mb-2">Payment Error</h3>
+          <p className="text-gray-600 mb-6">
+            Unable to calculate payment amount. Please go back and try again.
+          </p>
+          <button
+            onClick={onBack}
+            className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+          >
+            ← Back to Details
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const formatDate = (date) => {
     return date.toLocaleDateString('en-US', {
@@ -103,11 +73,42 @@ const PaymentView = ({
     return `$${parseFloat(amount).toFixed(2)}`;
   };
 
+  // Create payment intent when component mounts
+  useEffect(() => {
+    if (!success && totalAmount > 0 && !clientSecret) {
+      createPaymentIntent();
+    }
+  }, [totalAmount, success, clientSecret]);
+
+  const createPaymentIntent = async () => {
+    try {
+      console.log('Creating payment intent for amount:', totalAmount);
+      const result = await ApiService.createPaymentIntent(
+        Math.round(totalAmount * 100), // Convert to cents
+        'cad'
+      );
+      
+      if (result.clientSecret) {
+        setClientSecret(result.clientSecret);
+      } else {
+        throw new Error('Failed to get payment client secret');
+      }
+    } catch (error) {
+      console.error('Failed to create payment intent:', error);
+      setErrors(prev => ({ 
+        ...prev, 
+        payment: 'Failed to initialize payment. Please try again.' 
+      }));
+    }
+  };
+
+  // Canadian postal code validation
   const validateCanadianPostalCode = (postalCode) => {
     const regex = /^[ABCEGHJ-NPRSTVXY]\d[ABCEGHJ-NPRSTV-Z][ ]?\d[ABCEGHJ-NPRSTV-Z]\d$/i;
     return regex.test(postalCode);
   };
 
+  // Format Canadian postal code
   const formatCanadianPostalCode = (value) => {
     const cleaned = value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
     if (cleaned.length > 3) {
@@ -154,6 +155,7 @@ const PaymentView = ({
       return;
     }
 
+    // Validate billing details
     const billingErrors = validateBillingDetails();
     if (Object.keys(billingErrors).length > 0) {
       setErrors(billingErrors);
@@ -166,6 +168,7 @@ const PaymentView = ({
     try {
       console.log('Confirming card payment...');
       
+      // Confirm payment with Stripe
       const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
         payment_method: {
           card: card,
@@ -188,7 +191,7 @@ const PaymentView = ({
       }
 
       if (paymentIntent.status === 'succeeded') {
-        console.log('✅ Payment succeeded! Creating booking...');
+        console.log('Payment succeeded! Creating booking...');
         await createBookingAfterPayment(paymentIntent.id);
       }
 
@@ -200,6 +203,7 @@ const PaymentView = ({
     }
   };
 
+  // Single booking creation method after payment success
   const createBookingAfterPayment = async (paymentIntentId) => {
     try {
       const duration = selectedSlot.duration || 60;
@@ -210,15 +214,23 @@ const PaymentView = ({
       const endMin = totalMinutes % 60;
       const endTime24 = `${endHour.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`;
 
+      // FIXED: Use local timezone for date formatting
       const year = selectedDate.getFullYear();
       const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
       const day = String(selectedDate.getDate()).padStart(2, '0');
       const bookingDateString = `${year}-${month}-${day}`;
 
+      console.log('Booking date (local):', {
+        selectedDate: selectedDate.toString(),
+        formattedDate: bookingDateString,
+        startTime: startTime24,
+        endTime: endTime24
+      });
+
       const bookingPayload = {
-        facilitySlug: facilitySlug,
+        facilityId: facility.venueId.toString(),
         courtNumber: selectedCourt.id,
-        bookingDate: bookingDateString,
+        bookingDate: bookingDateString,  // Use local date string
         startTime: startTime24,
         endTime: endTime24,
         duration: duration,
@@ -232,8 +244,9 @@ const PaymentView = ({
         userId: bookingData.userId || null
       };
 
-      console.log('📦 Creating booking with payload:', bookingPayload);
+      console.log('Creating booking with payload:', bookingPayload);
 
+      // Create booking
       const bookingResult = await ApiService.createBooking(facilitySlug, bookingPayload);
       const bookingId = bookingResult.data?._id || bookingResult._id || bookingResult.id;
 
@@ -241,15 +254,17 @@ const PaymentView = ({
         throw new Error('Booking created but no ID returned');
       }
 
-      console.log('✅ Booking created:', bookingId);
+      console.log('Booking created successfully:', bookingId);
 
+      // Confirm payment and trigger email
       await ApiService.confirmPayment({
         bookingId: bookingId,
         paymentIntentId: paymentIntentId
       });
 
-      console.log('✅ Payment confirmed and email sent');
+      console.log('Payment confirmed and email sent');
 
+      // Trigger refresh event for calendar/layout views
       window.dispatchEvent(new CustomEvent('bookingCreated', { 
         detail: { bookingId, facilitySlug } 
       }));
@@ -257,7 +272,7 @@ const PaymentView = ({
       onSuccess();
 
     } catch (bookingError) {
-      console.error('❌ Failed to create booking after payment:', bookingError);
+      console.error('Failed to create booking after payment:', bookingError);
       setErrors({ 
         payment: `Payment succeeded but booking creation failed. Please contact support with payment ID: ${paymentIntentId}` 
       });
@@ -289,6 +304,7 @@ const PaymentView = ({
             Your court has been successfully booked. You'll receive a confirmation email shortly.
           </p>
           
+          {/* Booking Details */}
           <div className="bg-gray-50 rounded-lg p-6 mb-6 text-left max-w-md mx-auto">
             <h4 className="font-semibold text-gray-900 mb-4 text-center">Booking Details</h4>
             <div className="space-y-2">
@@ -312,7 +328,12 @@ const PaymentView = ({
                 <span className="text-gray-600">Customer:</span>
                 <span className="font-medium">{bookingData.customerName}</span>
               </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Email:</span>
+                <span className="font-medium">{bookingData.customerEmail}</span>
+              </div>
               
+              {/* Payment breakdown */}
               <div className="border-t pt-2 mt-3">
                 <div className="text-sm space-y-1">
                   <div className="flex justify-between">
@@ -346,48 +367,17 @@ const PaymentView = ({
             </div>
           </div>
           
-          <button
-            onClick={onReset}
-            className="bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-lg font-semibold transition-colors"
-          >
-            Book Another Court
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Validation/Loading View
-  if (validating) {
-    return (
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <div className="text-center py-12">
-          <Loader className="w-12 h-12 text-blue-500 mx-auto mb-4 animate-spin" />
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Validating Booking</h3>
-          <p className="text-gray-600">
-            Checking availability and preparing payment...
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  // Validation Error View
-  if (errors.validation) {
-    return (
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <div className="text-center py-12">
-          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Booking Unavailable</h3>
-          <p className="text-gray-600 mb-6">
-            {errors.validation}
-          </p>
-          <button
-            onClick={onBack}
-            className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
-          >
-            ← Select Another Slot
-          </button>
+          <div className="space-y-3">
+            <p className="text-sm text-gray-500">
+              Please arrive 10 minutes before your scheduled time.
+            </p>
+            <button
+              onClick={onReset}
+              className="bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-lg font-semibold transition-colors"
+            >
+              Book Another Court
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -406,6 +396,7 @@ const PaymentView = ({
         </button>
       </div>
 
+      {/* Order Summary - FIXED: Uses totalAmount consistently */}
       <div className="bg-gray-50 rounded-lg p-4 mb-6">
         <h3 className="font-semibold text-gray-900 mb-3">Order Summary</h3>
         <div className="space-y-2">
@@ -442,7 +433,19 @@ const PaymentView = ({
         </div>
       </div>
 
+      {/* Payment Form */}
       <form onSubmit={handlePayment} className="space-y-4">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+          <div className="flex items-start">
+            <AlertCircle className="w-5 h-5 text-blue-500 mr-2 mt-0.5" />
+            <div className="text-sm text-blue-700">
+              <p className="font-medium mb-1">Payment Information</p>
+              <p>Enter your card details and postal code to complete your booking.</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Contact Info */}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
@@ -466,6 +469,7 @@ const PaymentView = ({
           </div>
         </div>
 
+        {/* Card Info + Postal Code */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             <CreditCard className="w-4 h-4 inline mr-2" />
@@ -495,6 +499,9 @@ const PaymentView = ({
           {errors.postal_code && (
             <p className="mt-2 text-sm text-red-600">{errors.postal_code}</p>
           )}
+          <p className="mt-2 text-xs text-gray-500">
+            Enter your card details and the postal code associated with your credit card
+          </p>
         </div>
 
         {errors.payment && (
@@ -505,6 +512,16 @@ const PaymentView = ({
             </div>
           </div>
         )}
+
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-start">
+            <AlertCircle className="w-5 h-5 text-blue-500 mr-2 mt-0.5" />
+            <div className="text-sm text-blue-700">
+              <p className="font-medium mb-1">Secure Payment</p>
+              <p>Your payment information is encrypted and secure. We use Stripe for payment processing.</p>
+            </div>
+          </div>
+        </div>
 
         <button
           type="submit"
@@ -521,6 +538,12 @@ const PaymentView = ({
           )}
         </button>
       </form>
+
+      <div className="mt-4 text-center">
+        <p className="text-xs text-gray-500">
+          By completing this purchase you agree to our terms of service and cancellation policy.
+        </p>
+      </div>
     </div>
   );
 };
