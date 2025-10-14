@@ -275,10 +275,14 @@ class ApiService {
   }
 
   async confirmPayment(paymentData) {
-    const result = await this.request('/booking/confirm-payment', {
+    console.log('🔔 Calling confirmPayment API:', paymentData);
+  
+    const result = await this.request('/tenant/booking/confirm-payment', {  // ✅ Changed to tenant endpoint
       method: 'POST',
       body: paymentData,
     });
+  
+    console.log('✅ confirmPayment response:', result);
     return result.data || result;
   }
 
