@@ -23,10 +23,9 @@ const VendorDashboard = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [cancellingBooking, setCancellingBooking] = useState(null);
 
-  const courts = [
-    'Court 1', 'Court 2', 'Court 3', 'Court 4', 'Court 5',
-    'Court 6', 'Court 7', 'Court 8', 'Court 9', 'Court 10'
-  ];
+  // Replace the hardcoded courts array with:
+  const [courts, setCourts] = useState([]);
+  const [facilityConfig, setFacilityConfig] = useState(null);
 
   useEffect(() => {
     loadDashboardData();
@@ -37,12 +36,19 @@ const VendorDashboard = () => {
     try {
       const vendorData = vendorApi.getVendorData();
       setVendor(vendorData);
+
+      // Fetch facility courts configuration
+      const courtsResult = await vendorApi.getFacilityCourts();
+      if (courtsResult.data.courts) {
+        setCourts(courtsResult.data.courts);
+        setFacilityConfig(courtsResult.data);
+      }
       
       const year = selectedDate.getFullYear();
       const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
       const day = String(selectedDate.getDate()).padStart(2, '0');
       const dateStr = `${year}-${month}-${day}`;
-      
+  
       const statsResult = await vendorApi.getStats({ date: dateStr });
       setStats(statsResult.data);
       
@@ -366,6 +372,7 @@ const VendorDashboard = () => {
                       <tr key={booking._id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">{booking.courtName}</div>
+                          <div className="text-xs text-gray-500">{booking.sport || 'Badminton'}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">

@@ -156,13 +156,23 @@ const CreateBookingModal = ({ isOpen, onClose, selectedDate, courts, onBookingCr
             </label>
             <select
               value={formData.courtName}
-              onChange={(e) => setFormData({ ...formData, courtName: e.target.value })}
+              onChange={(e) => {
+                const selectedCourt = courts.find(c => c.name === e.target.value);
+                setFormData({ 
+                  ...formData, 
+                  courtName: e.target.value,
+                  courtId: selectedCourt?.id,
+                  sport: selectedCourt?.sport 
+                });
+              }}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500"
               required
             >
               <option value="">Select a court</option>
               {courts.map((court) => (
-                <option key={court} value={court}>{court}</option>
+                <option key={court.id || court.name} value={court.name}>
+                  {court.name} - {court.sport || 'Badminton'} (${court.sport === 'Pickleball' ? '30' : '25'}/hr)
+                </option>
               ))}
             </select>
           </div>

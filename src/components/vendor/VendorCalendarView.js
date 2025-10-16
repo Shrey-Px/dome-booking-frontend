@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import vendorApi from '../../services/vendorApi';
 
-const VendorCalendarView = ({ selectedDate, onDateChange }) => {
+const VendorCalendarView = ({ selectedDate, onDateChange, courts = [] }) => {
   const [bookings, setBookings] = useState({});
   const [loading, setLoading] = useState(true);
   const [timeSlots, setTimeSlots] = useState([]);
@@ -201,21 +201,30 @@ const VendorCalendarView = ({ selectedDate, onDateChange }) => {
       </div>
 
       {/* Calendar Grid */}
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-gray-50">
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-b sticky left-0 bg-gray-50 z-10">
-                TIME
-              </th>
-              {courts.map(court => (
-                <th key={court.id} className="px-4 py-3 text-center border-b min-w-[120px]">
-                  <div className="text-sm font-semibold text-gray-900">{court.name}</div>
-                  <div className="text-xs text-gray-500">{court.sport}</div>
+      <div className="relative">
+        {courts.length > 10 && (
+          <div className="absolute right-0 top-1/2 transform -translate-y-1/2 z-20 bg-gray-800 text-white p-2 rounded-l-lg shadow-lg pointer-events-none">
+            <span className="text-xs">→ Scroll for more courts</span>
+          </div>
+        )}
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-gray-50">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-b sticky left-0 bg-gray-50 z-10">
+                  TIME
                 </th>
-              ))}
-            </tr>
-          </thead>
+                {courts.map(court => (
+                  <th key={court.id} className="px-4 py-3 text-center border-b min-w-[120px]">
+                    <div className="text-sm font-semibold text-gray-900">{court.name}</div>
+                    <div className="text-xs text-gray-500">{court.sport}</div>
+                    <div className="text-xs" style={{ color: court.sport === 'Pickleball' ? '#3B82F6' : '#10B981' }}>
+                      ${court.sport === 'Pickleball' ? '30' : '25'}/hr
+                    </div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
           <tbody>
             {timeSlots.map((time) => (
               <tr key={time} className="border-b hover:bg-gray-50">

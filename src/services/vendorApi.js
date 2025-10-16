@@ -83,6 +83,11 @@ class VendorApiService {
     return result;
   }
 
+  // Add this method to vendorApi service:
+  async getFacilityCourts() {
+    return await this.request('/courts');
+  }
+
   async logout() {
     try {
       await this.request('/logout', { method: 'POST' });
