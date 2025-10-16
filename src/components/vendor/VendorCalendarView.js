@@ -248,6 +248,7 @@ const VendorCalendarView = ({ selectedDate, onDateChange, courts = [] }) => {
           </tbody>
         </table>
       </div>
+      </div>
 
       {/* Legend */}
       <div className="bg-gray-50 px-4 py-3 border-t flex items-center justify-between">
