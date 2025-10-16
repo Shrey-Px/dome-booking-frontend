@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import vendorApi from '../../services/vendorApi';
 
@@ -7,11 +7,15 @@ const VendorCalendarView = ({ selectedDate, onDateChange, courts = [] }) => {
   const [loading, setLoading] = useState(true);
   const [timeSlots, setTimeSlots] = useState([]);
 
-  const courts = Array.from({ length: 10 }, (_, i) => ({
-    id: i + 1,
-    name: `Court ${i + 1}`,
-    sport: 'Badminton'
-  }));
+  const resolvedCourts = useMemo(() => (
+    courts && courts.length
+      ? courts
+      : Array.from({ length: 10 }, (_, i) => ({
+          id: i + 1,
+          name: `Court ${i + 1}`,
+          sport: 'Badminton'
+        }))
+  ), [courts]);
 
   // Generate time slots based on selected date
   useEffect(() => {
@@ -202,7 +206,7 @@ const VendorCalendarView = ({ selectedDate, onDateChange, courts = [] }) => {
 
       {/* Calendar Grid */}
       <div className="relative">
-        {courts.length > 10 && (
+        {resolvedCourts.length > 10 && (
           <div className="absolute right-0 top-1/2 transform -translate-y-1/2 z-20 bg-gray-800 text-white p-2 rounded-l-lg shadow-lg pointer-events-none">
             <span className="text-xs">→ Scroll for more courts</span>
           </div>
@@ -214,7 +218,7 @@ const VendorCalendarView = ({ selectedDate, onDateChange, courts = [] }) => {
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-b sticky left-0 bg-gray-50 z-10">
                   TIME
                 </th>
-                {courts.map(court => (
+                {resolvedCourts.map(court => (
                   <th key={court.id} className="px-4 py-3 text-center border-b min-w-[120px]">
                     <div className="text-sm font-semibold text-gray-900">{court.name}</div>
                     <div className="text-xs text-gray-500">{court.sport}</div>
@@ -234,7 +238,7 @@ const VendorCalendarView = ({ selectedDate, onDateChange, courts = [] }) => {
                     <span>{time}</span>
                   </div>
                 </td>
-                {courts.map(court => (
+                {resolvedCourts.map(court => (
                   <td key={court.id} className="p-0 border-r h-16">
                     {renderSlot(court, time)}
                   </td>
