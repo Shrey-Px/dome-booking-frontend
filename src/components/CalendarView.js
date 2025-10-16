@@ -29,7 +29,8 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
     sport: court.sport
   })) || [];
 
-  // Get time slots from facility operating hours
+  // CalendarView.js - CRITICAL FIX: Lines 35-60
+  // Replace the getTimeSlots function with this corrected version:
   const getTimeSlots = () => {
     if (!facility?.operatingHours) {
       // Fallback to default hours if not available
@@ -39,7 +40,15 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
     }
 
     const dayOfWeek = selectedDate.getDay();
+    // ✅ FIXED: 0 = Sunday, 6 = Saturday
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+    
+    console.log('CalendarView - Date Info:', {
+      date: selectedDate.toDateString(),
+      dayOfWeek,
+      dayName: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayOfWeek],
+      isWeekend
+    });
     
     const hours = isWeekend ? facility.operatingHours.weekend : facility.operatingHours.weekday;
     const [startHour] = hours.start.split(':').map(Number);
@@ -51,6 +60,15 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
       const displayHour = hour % 12 || 12;
       slots.push(`${displayHour}:00 ${period}`);
     }
+    
+    console.log('CalendarView - Generated slots:', {
+      isWeekend,
+      startHour,
+      endHour,
+      slotCount: slots.length,
+      firstSlot: slots[0],
+      lastSlot: slots[slots.length - 1]
+    });
     
     return slots;
   };
