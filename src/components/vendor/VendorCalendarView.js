@@ -71,7 +71,6 @@ const VendorCalendarView = ({ selectedDate, onDateChange, courts = [], operating
 
   useEffect(() => {
     loadCalendarData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate]);
 
   const loadCalendarData = async () => {
