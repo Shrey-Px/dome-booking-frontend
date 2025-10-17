@@ -23,6 +23,15 @@ const VendorCalendarView = ({ selectedDate, onDateChange, courts = [], operating
     return [...badminton, ...pickleball];
   }, [courts]);
 
+  // Map of court display name -> column id
+  const nameToId = React.useMemo(() => {
+    const m = new Map();
+    resolvedCourts.forEach(c => {
+      m.set(String(c.name).toLowerCase().trim(), String(c.id)); // e.g. "court p1" -> "P1"
+    });
+    return m;
+  }, [resolvedCourts]);
+
   // Generate time slots based on selected date
   useEffect(() => {
     const dayOfWeek = selectedDate.getDay(); // 0 = Sunday, 6 = Saturday
@@ -50,7 +59,7 @@ const VendorCalendarView = ({ selectedDate, onDateChange, courts = [], operating
 
     // console.log('Time slots generated:', { date: selectedDate.toDateString(), isWeekend, slots });
     setTimeSlots(slots);
-  }, [selectedDate]);
+  }, [selectedDate, operatingHours]);
 
   useEffect(() => {
     loadCalendarData();
@@ -75,7 +84,7 @@ const VendorCalendarView = ({ selectedDate, onDateChange, courts = [], operating
       result.data.bookings
         .filter(booking => booking.bookingStatus !== 'Cancelled')
         .forEach(booking => {
-          const courtNum = extractCourtNumber(booking.courtName);
+          const courtKeyId = getCourtKeyId(booking.courtName);   // <- "1..22" or "P1/P2"
         
           // Convert the booking start time to 12-hour format for matching
           let startTime12Hour;
@@ -85,7 +94,7 @@ const VendorCalendarView = ({ selectedDate, onDateChange, courts = [], operating
             startTime12Hour = formatTimeTo12Hour(booking.startTime);
           }
         
-          const key = `${courtNum}-${startTime12Hour}`;
+          const key = `${courtKeyId}-${startTime12Hour}`;
           bookingMap[key] = booking;
         
           // console.log(`Booking mapped: ${key}`, booking);
@@ -100,9 +109,25 @@ const VendorCalendarView = ({ selectedDate, onDateChange, courts = [], operating
     }
   };
 
-  const extractCourtNumber = (courtName) => {
-    const match = courtName.match(/\d+/);
-    return match ? match[0] : courtName;
+  // Turn a booking.courtName into the *same* id your table uses for that court
+  const getCourtKeyId = (courtName) => {
+    if (!courtName) return '';
+    const lc = String(courtName).toLowerCase().trim();
+
+    // 2. Try exact name match first (best case)
+    const direct = nameToId.get(lc);
+    if (direct) return direct;
+
+    // 3. Handle "Court P1", "P1", "Pickleball Court 1", etc.
+    const pMatch = lc.match(/p\s*([0-9]+)/i);
+    if (pMatch) return `P${pMatch[1]}`;
+
+    // 4. Fallback: use first number (for badminton "Court 7" -> "7")
+    const numMatch = lc.match(/(\d+)/);
+    if (numMatch) return String(parseInt(numMatch[1], 10));
+
+    // 5. Absolute fallback: use original text
+    return lc;
   };
 
   const convert24HourTo12Hour = (time24) => {
