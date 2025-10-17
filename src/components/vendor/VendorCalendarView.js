@@ -20,6 +20,7 @@ const VendorCalendarView = ({ selectedDate, onDateChange, courts = [], operating
   const [timeSlots, setTimeSlots] = useState([]);
 
   // Horizontal scroll container
+  const [showScrollArrow, setShowScrollArrow] = useState(true);
   const calendarRef = useRef(null);
   const scrollRight = () => {
     if (calendarRef.current) {
@@ -42,6 +43,18 @@ const VendorCalendarView = ({ selectedDate, onDateChange, courts = [], operating
     ];
     return [...badminton, ...pickleball];
   }, [courts]);
+
+  const handleScroll = (e) => {
+    const el = e.target;
+    const isAtEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 10;
+    setShowScrollArrow(!isAtEnd);
+  };
+
+  const scrollRight = () => {
+    if (calendarRef.current) {
+      calendarRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+    }
+  };
 
   // Map court "name" -> "id" to line bookings up with the correct column
   const nameToId = useMemo(() => {
@@ -158,10 +171,13 @@ const VendorCalendarView = ({ selectedDate, onDateChange, courts = [], operating
 
     if (booking) {
       return (
-        <div className="h-full bg-red-100 border-l-4 border-red-500 p-2 hover:bg-red-200 transition-colors cursor-pointer relative group flex items-center">
-          <div>
+        <div className="h-16 bg-red-100 border-l-4 border-red-500 px-2 hover:bg-red-200 transition-colors cursor-pointer relative group">
+          {/* Centered content */}
+          <div className="w-full h-full flex flex-col items-center justify-center text-center">
             <div className="text-xs font-semibold text-red-800">BOOKED</div>
-            <div className="text-xs text-red-700 truncate">{booking.customerName}</div>
+            <div className="text-xs text-red-700 truncate max-w-[110px]">
+              {booking.customerName}
+            </div>
           </div>
 
           {/* Hover tooltip */}
@@ -171,7 +187,9 @@ const VendorCalendarView = ({ selectedDate, onDateChange, courts = [], operating
               <div>📧 {booking.customerEmail}</div>
               {booking.customerPhone && <div>📞 {booking.customerPhone}</div>}
               <div>💰 ${booking.totalPrice}</div>
-              <div className="mt-2 pt-2 border-t border-gray-700">Status: {booking.bookingStatus}</div>
+              <div className="mt-2 pt-2 border-t border-gray-700">
+                Status: {booking.bookingStatus}
+              </div>
             </div>
           </div>
         </div>
@@ -219,21 +237,31 @@ const VendorCalendarView = ({ selectedDate, onDateChange, courts = [], operating
         </div>
       </div>
 
-      {/* Calendar Grid */}
-      <div className="relative">
-        {resolvedCourts.length > 10 && (
-          <div
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 z-30 scroll-hint cursor-pointer"
+      <div className="max-w-7xl mx-auto relative" style={{ padding: '24px' }}>
+        {/* Clickable Scroll Arrow */}
+        {showScrollArrow && (
+          <button
             onClick={scrollRight}
+            className="absolute right-6 top-1/2 transform -translate-y-1/2 z-30 bg-gray-800 hover:bg-gray-700 text-white p-3 rounded-lg shadow-xl transition-all hover:scale-110"
+            style={{ marginTop: '-24px' }}
             title="Scroll to see more courts"
-            style={{
-              backgroundColor: 'rgba(55, 65, 81, 0.9)',
-              color: 'white',
-              padding: '12px 8px',
-              borderRadius: '8px',
-              boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-            }}
           >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        )}
+
+        <div
+          ref={calendarRef}
+          onScroll={handleScroll}
+          className="rounded-xl overflow-x-auto relative"
+          style={{
+            backgroundColor: '#FFFFFF',
+            boxShadow: '0 10px 15px rgba(0, 0, 0, 0.1)',
+            border: '1px solid #F3F4F6'
+          }}
+        >
             <div style={{ fontSize: '20px', lineHeight: 1 }}>▶</div>
           </div>
         )}
