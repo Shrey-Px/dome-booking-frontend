@@ -213,7 +213,7 @@ const PaymentView = ({
       // Step 2: Now process the payment
       const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
         payment_method: {
-          card: card,
+          card: card, // or elements.getElement(CardElement)
           billing_details: {
             name: billingDetails.name,
             email: billingDetails.email,
@@ -222,11 +222,8 @@ const PaymentView = ({
               postal_code: billingDetails.address.postal_code,
               country: 'CA'
             }
-          },
-        },
-        metadata: {
-          bookingId: bookingId // Attach booking ID to payment
-        }
+          } 
+        } 
       });
 
       if (error) {
