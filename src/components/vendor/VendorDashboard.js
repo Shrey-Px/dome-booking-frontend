@@ -336,6 +336,8 @@ const VendorDashboard = () => {
           <VendorCalendarView 
             selectedDate={selectedDate}
             onDateChange={setSelectedDate}
+            courts={courts}
+            operatingHours={facilityConfig?.operatingHours}
           />
         ) : (
           <div className="bg-white rounded-lg shadow overflow-hidden">

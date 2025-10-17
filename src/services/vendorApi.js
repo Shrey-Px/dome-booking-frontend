@@ -28,44 +28,35 @@ class VendorApiService {
 
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}/vendor${endpoint}`;
-    
+
     const config = {
+      method: options.method || 'GET',
       headers: {
         'Content-Type': 'application/json',
-        ...options.headers,
+        ...(options.headers || {})
       },
-      ...options,
+      ...(options || {})
     };
 
-    // Add auth token if available
+    // auth header
     const token = this.getToken();
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
-    }
-    
-    if (config.body && typeof config.body === 'object') {
+    if (token) config.headers['Authorization'] = `Bearer ${token}`;
+
+    // only stringify if body is a plain object (not already a string/FormData)
+    if (config.body && typeof config.body === 'object' && !(config.body instanceof FormData)) {
       config.body = JSON.stringify(config.body);
     }
 
-    try {
-      const response = await fetch(url, config);
-      const data = await response.json();
-      
-      if (!response.ok) {
-        // Handle token expiration
-        if (response.status === 401) {
-          this.clearToken();
-          window.location.href = '/vendor/login';
-        }
-        throw new Error(data.message || `HTTP error! status: ${response.status}`);
+    const response = await fetch(url, config);
+    const data = await response.json();
+    if (!response.ok) {
+      if (response.status === 401) {
+        this.clearToken();
+        window.location.href = '/vendor/login';
       }
-      
-      return data;
-      
-    } catch (error) {
-      console.error('Vendor API request failed:', error);
-      throw error;
+      throw new Error(data.message || `HTTP error! status: ${response.status}`);
     }
+    return data;
   }
 
   // Authentication
