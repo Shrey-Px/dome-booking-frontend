@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import vendorApi from '../../services/vendorApi';
 
@@ -7,14 +7,21 @@ const VendorCalendarView = ({ selectedDate, onDateChange, courts = [], operating
   const [loading, setLoading] = useState(true);
   const [timeSlots, setTimeSlots] = useState([]);
 
-  const resolvedCourts = courts && courts.length
-    ? courts
-    : Array.from({ length: 10 }, (_, i) => ({
-        id: i + 1,
-        name: `Court ${i + 1}`,
-        sport: 'Badminton'
-      }))
-  ), [courts]);
+  const resolvedCourts = useMemo(() => {
+    if (courts && courts.length) return courts;
+
+    // Fallback: 22 badminton + 2 pickleball to match customer portal
+    const badminton = Array.from({ length: 22 }, (_, i) => ({
+      id: i + 1,
+      name: `Court ${i + 1}`,
+      sport: 'Badminton',
+    }));
+    const pickleball = [
+      { id: 'P1', name: 'Court P1', sport: 'Pickleball' },
+      { id: 'P2', name: 'Court P2', sport: 'Pickleball' },
+    ];
+    return [...badminton, ...pickleball];
+  }, [courts]);
 
   // Generate time slots based on selected date
   useEffect(() => {
