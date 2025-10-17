@@ -22,11 +22,6 @@ const VendorCalendarView = ({ selectedDate, onDateChange, courts = [], operating
   // Horizontal scroll container
   const [showScrollArrow, setShowScrollArrow] = useState(true);
   const calendarRef = useRef(null);
-  const scrollRight = () => {
-    if (calendarRef.current) {
-      calendarRef.current.scrollBy({ left: 320, behavior: 'smooth' });
-    }
-  };
 
   // 22 badminton + 2 pickleball fallback (matches customer portal)
   const resolvedCourts = useMemo(() => {
