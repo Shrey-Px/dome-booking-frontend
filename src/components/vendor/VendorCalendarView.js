@@ -308,6 +308,7 @@ const VendorCalendarView = ({ selectedDate, onDateChange, courts = [], operating
         </div>
       </div>
     </div>
+    </div>
   );
 };
 
