@@ -141,6 +141,7 @@ const PaymentView = ({
     return newErrors;
   };
 
+  // Better approach - modify handlePayment method to create booking first
   const handlePayment = async (event) => {
     event.preventDefault();
 
@@ -166,9 +167,50 @@ const PaymentView = ({
     setErrors({});
 
     try {
-      console.log('Confirming card payment...');
-      
-      // Confirm payment with Stripe
+      // Step 1: Create booking FIRST (before charging the card)
+      const duration = selectedSlot.duration || 60;
+      const startTime24 = selectedSlot.time24;
+      const [startHour, startMin] = startTime24.split(':').map(Number);
+      const totalMinutes = startHour * 60 + startMin + duration;
+      const endHour = Math.floor(totalMinutes / 60);
+      const endMin = totalMinutes % 60;
+      const endTime24 = `${endHour.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`;
+
+      // Use local timezone
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(selectedDate.getDate()).padStart(2, '0');
+      const bookingDateString = `${year}-${month}-${day}`;
+
+      const bookingPayload = {
+        facilityId: facility.venueId.toString(),
+        courtNumber: selectedCourt.id,
+        bookingDate: bookingDateString,
+        startTime: startTime24,
+        endTime: endTime24,
+        duration: duration,
+        totalAmount: totalAmount,
+        discountCode: bookingData.discountCode || null,
+        discountAmount: paymentData.discountAmount || 0,
+        source: 'web',
+        customerName: bookingData.customerName,
+        customerEmail: bookingData.customerEmail,
+        customerPhone: bookingData.customerPhone,
+        userId: bookingData.userId || null,
+        paymentIntentId: clientSecret.split('_secret')[0] // Extract intent ID
+      };
+
+      console.log('Creating booking first...', bookingPayload);
+      const bookingResult = await ApiService.createBooking(facilitySlug, bookingPayload);
+      const bookingId = bookingResult.data?._id || bookingResult._id || bookingResult.id;
+
+      if (!bookingId) {
+        throw new Error('Unable to create booking. Please try again.');
+      }
+
+      console.log('Booking created, now processing payment...');
+
+      // Step 2: Now process the payment
       const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
         payment_method: {
           card: card,
@@ -181,110 +223,45 @@ const PaymentView = ({
               country: 'CA'
             }
           },
+        },
+        metadata: {
+          bookingId: bookingId // Attach booking ID to payment
         }
       });
 
       if (error) {
-        console.error('Payment error:', error);
-        setErrors({ payment: error.message });
-        return;
+        // Payment failed - we need to cancel the booking
+        console.error('Payment failed, cancelling booking:', error);
+        try {
+          await ApiService.cancelBooking(bookingId);
+        } catch (cancelError) {
+          console.error('Failed to cancel booking after payment failure:', cancelError);
+        }
+        throw new Error(error.message);
       }
 
+      // Step 3: Payment succeeded - confirm and send email
       if (paymentIntent.status === 'succeeded') {
-        console.log('Payment succeeded! Creating booking...');
-        await createBookingAfterPayment(paymentIntent.id);
+        console.log('Payment succeeded, confirming...');
+        
+        await ApiService.confirmPayment({
+          bookingId: bookingId,
+          paymentIntentId: paymentIntent.id
+        });
+
+        // Trigger UI updates
+        window.dispatchEvent(new CustomEvent('bookingCreated', { 
+          detail: { bookingId, facilitySlug } 
+        }));
+
+        onSuccess();
       }
 
     } catch (error) {
-      console.error('Payment failed:', error);
-      setErrors({ payment: 'Payment processing failed. Please try again.' });
+      console.error('Booking/Payment failed:', error);
+      setErrors({ payment: error.message || 'Failed to complete booking. Please try again.' });
     } finally {
       setProcessing(false);
-    }
-  };
-
-  // Single booking creation method after payment success
-  const createBookingAfterPayment = async (paymentIntentId) => {
-    try {
-      const duration = selectedSlot.duration || 60;
-      const startTime24 = selectedSlot.time24;
-      const [startHour, startMin] = startTime24.split(':').map(Number);
-      const totalMinutes = startHour * 60 + startMin + duration;
-      const endHour = Math.floor(totalMinutes / 60);
-      const endMin = totalMinutes % 60;
-      const endTime24 = `${endHour.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`;
-
-      // FIXED: Use local timezone for date formatting
-      const year = selectedDate.getFullYear();
-      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
-      const day = String(selectedDate.getDate()).padStart(2, '0');
-      const bookingDateString = `${year}-${month}-${day}`;
-
-      console.log('Booking date (local):', {
-        selectedDate: selectedDate.toString(),
-        formattedDate: bookingDateString,
-        startTime: startTime24,
-        endTime: endTime24
-      });
-
-      const bookingPayload = {
-        facilityId: facility.venueId.toString(),
-        courtNumber: selectedCourt.id,
-        bookingDate: bookingDateString,  // Use local date string
-        startTime: startTime24,
-        endTime: endTime24,
-        duration: duration,
-        totalAmount: totalAmount,
-        discountCode: bookingData.discountCode || null,
-        discountAmount: paymentData.discountAmount || 0,
-        source: 'web',
-        customerName: bookingData.customerName,
-        customerEmail: bookingData.customerEmail,
-        customerPhone: bookingData.customerPhone,
-        userId: bookingData.userId || null
-      };
-
-      console.log('Creating booking with payload:', bookingPayload);
-
-      // Create booking
-      const bookingResult = await ApiService.createBooking(facilitySlug, bookingPayload);
-      const bookingId = bookingResult.data?._id || bookingResult._id || bookingResult.id;
-
-      if (!bookingId) {
-        throw new Error('Booking created but no ID returned');
-      }
-
-      console.log('Booking created successfully:', bookingId);
-
-      // Confirm payment and trigger email
-      try {
-        console.log('Confirming payment and triggering email...', { bookingId, paymentIntentId });
-  
-        await ApiService.confirmPayment({
-          bookingId: bookingId,
-          paymentIntentId: paymentIntentId
-        });
-  
-        console.log('Payment confirmed and email sent');
-      } catch (confirmError) {
-        console.error('Failed to confirm payment (booking still created):', confirmError);
-        // Don't fail the whole flow - booking is already created
-      }
-
-      console.log('Payment confirmed and email sent');
-
-      // Trigger refresh event for calendar/layout views
-      window.dispatchEvent(new CustomEvent('bookingCreated', { 
-        detail: { bookingId, facilitySlug } 
-      }));
-
-      onSuccess();
-
-    } catch (bookingError) {
-      console.error('Failed to create booking after payment:', bookingError);
-      setErrors({ 
-        payment: `Payment succeeded but booking creation failed. Please contact support with payment ID: ${paymentIntentId}` 
-      });
     }
   };
 

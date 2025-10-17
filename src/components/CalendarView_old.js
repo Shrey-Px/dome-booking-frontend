@@ -29,28 +29,26 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
     sport: court.sport
   })) || [];
 
+  // CalendarView.js - CRITICAL FIX: Lines 35-60
+  // Replace the getTimeSlots function with this corrected version:
   const getTimeSlots = () => {
     if (!facility?.operatingHours) {
       // Fallback to default hours if not available
-      const dayOfWeek = selectedDate.getDay();
-      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-      
-      if (isWeekend) {
-        // Weekend: 6 AM to 10 PM
-        return ['6:00 AM', '7:00 AM', '8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM',
-                '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM',
-                '6:00 PM', '7:00 PM', '8:00 PM', '9:00 PM'];
-      } else {
-        // Weekday: 8 AM to 8 PM
-        return ['8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', 
-                '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', 
-                '6:00 PM', '7:00 PM'];
-      }
+      return ['8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', 
+              '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', 
+              '6:00 PM', '7:00 PM'];
     }
 
-    // Use local date's day of week, not UTC
-    const dayOfWeek = selectedDate.getDay(); // 0 = Sunday, 6 = Saturday
+    const dayOfWeek = selectedDate.getDay();
+    // ✅ FIXED: 0 = Sunday, 6 = Saturday
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+    
+    console.log('CalendarView - Date Info:', {
+      date: selectedDate.toDateString(),
+      dayOfWeek,
+      dayName: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayOfWeek],
+      isWeekend
+    });
     
     const hours = isWeekend ? facility.operatingHours.weekend : facility.operatingHours.weekday;
     const [startHour] = hours.start.split(':').map(Number);
@@ -62,6 +60,15 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
       const displayHour = hour % 12 || 12;
       slots.push(`${displayHour}:00 ${period}`);
     }
+    
+    console.log('CalendarView - Generated slots:', {
+      isWeekend,
+      startHour,
+      endHour,
+      slotCount: slots.length,
+      firstSlot: slots[0],
+      lastSlot: slots[slots.length - 1]
+    });
     
     return slots;
   };

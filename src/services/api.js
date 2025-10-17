@@ -118,16 +118,17 @@ class ApiService {
     }
   }
 
-  // Availability - Updated to use facility from context
+  // In api.js, update the getAvailability method:
   async getAvailability(facilitySlug, date) {
     try {
-      // console.log('Getting availability...');
-      // console.log('Facility slug:', facilitySlug);
-      
-      // Ensure date is in YYYY-MM-DD format
+      // Ensure date is in YYYY-MM-DD format using LOCAL timezone
       let dateStr;
       if (date instanceof Date) {
-        dateStr = date.toISOString().split('T')[0];
+        // Use local date components, not UTC
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        dateStr = `${year}-${month}-${day}`;
       } else if (typeof date === 'string') {
         if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
           throw new Error(`Invalid date format: ${date}. Expected YYYY-MM-DD`);
@@ -137,16 +138,10 @@ class ApiService {
         throw new Error(`Invalid date type: ${typeof date}`);
       }
       
-      // console.log('Formatted date string:', dateStr);
-      
       const timestamp = new Date().getTime();
       const url = `/availability?facility=${facilitySlug}&date=${dateStr}&_t=${timestamp}`;
       
-      // console.log('Final URL:', this.baseURL + url);
-      
       const result = await this.request(url);
-      // console.log('Availability result:', result);
-      
       return result.data || result;
       
     } catch (error) {
