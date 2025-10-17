@@ -3,17 +3,6 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import vendorApi from '../../services/vendorApi';
 
-// Simple keyframes + class for the scroll hint
-const scrollHintStyles = `
-  @keyframes bounce-right {
-    0%, 100% { transform: translateX(0); }
-    50% { transform: translateX(6px); }
-  }
-  .scroll-hint {
-    animation: bounce-right 2s infinite;
-  }
-`;
-
 const VendorCalendarView = ({ selectedDate, onDateChange, courts = [], operatingHours }) => {
   const [bookings, setBookings] = useState({});
   const [loading, setLoading] = useState(true);
@@ -202,8 +191,6 @@ const VendorCalendarView = ({ selectedDate, onDateChange, courts = [], operating
 
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
-      {/* Keyframe styles for the scroll hint */}
-      <style>{scrollHintStyles}</style>
 
       {/* Header */}
       <div className="bg-gray-700 text-white p-4">
@@ -257,10 +244,6 @@ const VendorCalendarView = ({ selectedDate, onDateChange, courts = [], operating
             border: '1px solid #F3F4F6'
           }}
         >
-            <div style={{ fontSize: '20px', lineHeight: 1 }}>▶</div>
-          </div>
-        )}
-
         <div ref={calendarRef} className="overflow-x-auto relative">
           <table className="w-full border-collapse">
             <thead>
