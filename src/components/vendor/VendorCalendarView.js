@@ -43,6 +43,24 @@ const VendorCalendarView = ({ selectedDate, onDateChange, courts = [], operating
     return [...badminton, ...pickleball];
   }, [courts]);
 
+  // "6:00 AM" -> "06:00", "1:00 PM" -> "13:00"
+  const to24 = (time12) => {
+    try {
+      const [time, period] = time12.split(' ');
+      let [h, m] = time.split(':').map(Number);
+      if (period === 'PM' && h !== 12) h += 12;
+      if (period === 'AM' && h === 12) h = 0;
+      return `${h.toString().padStart(2, '0')}:${(m || 0).toString().padStart(2, '0')}`;
+    } catch {
+      return '00:00';
+    }
+  };
+
+  const isTimeFullyBooked = (timeLabel) => {
+    const t24 = to24(timeLabel);
+    return resolvedCourts.every(court => Boolean(bookings[court.id]?.[t24]));
+  };
+
   // Map court "name" -> "id" to line bookings up with the correct column
   const nameToId = useMemo(() => {
     const m = new Map();
@@ -268,7 +286,10 @@ const VendorCalendarView = ({ selectedDate, onDateChange, courts = [], operating
                 <tr key={time} className="border-b hover:bg-gray-50">
                   <td className="px-4 py-2 text-sm font-medium text-gray-700 border-r sticky left-0 bg-white z-10">
                     <div className="flex items-center space-x-2">
-                      <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                      <span
+                        className="w-2 h-2 rounded-full"
+                        style={{ backgroundColor: isTimeFullyBooked(time) ? '#EF4444' : '#10B981' }}
+                      ></span>
                       <span>{time}</span>
                     </div>
                   </td>
