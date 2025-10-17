@@ -862,7 +862,7 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
               }}
             >
               <div 
-                className="font-medium border-r"
+                className="font-medium border-r sticky left-0 z-10 bg-white"
                 style={{ 
                   padding: '16px',
                   backgroundColor: '#FFFFFF',
@@ -923,7 +923,7 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
   		  }}
                 >
                   <div 
-                    className="border-r font-medium"
+                    className="border-r font-medium sticky left-0 z-10 bg-white"
                     style={{ 
                       padding: '16px',
                       backgroundColor: '#FFFFFF',
