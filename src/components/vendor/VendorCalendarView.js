@@ -266,18 +266,28 @@ const VendorCalendarView = ({ selectedDate, onDateChange, courts = [], operating
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-b sticky left-0 bg-gray-50 z-10">
                   TIME
                 </th>
-                {resolvedCourts.map((court) => (
-                  <th key={court.id} className="px-4 py-3 text-center border-b min-w-[120px]">
-                    <div className="text-sm font-semibold text-gray-900">{court.name}</div>
-                    <div className="text-xs text-gray-500">{court.sport}</div>
-                    <div
-                      className="text-xs"
-                      style={{ color: court.sport === 'Pickleball' ? '#3B82F6' : '#10B981' }}
-                    >
-                      ${court.sport === 'Pickleball' ? '30' : '25'}/hr
-                    </div>
-                  </th>
-                ))}
+                {resolvedCourts.map((court) => {
+                  // Calculate price based on sport
+                  const price = court.sport === 'Cricket' ? '45' : 
+                                court.sport === 'Pickleball' ? '30' : '25';
+                  
+                  // Calculate color based on sport
+                  const color = court.sport === 'Cricket' ? '#F97316' : 
+                                court.sport === 'Pickleball' ? '#3B82F6' : '#10B981';
+                  
+                  return (
+                    <th key={court.id} className="px-4 py-3 text-center border-b min-w-[120px]">
+                      <div className="text-sm font-semibold text-gray-900">{court.name}</div>
+                      <div className="text-xs text-gray-500">{court.sport}</div>
+                      <div
+                        className="text-xs"
+                        style={{ color }}
+                      >
+                        ${price}/hr
+                      </div>
+                    </th>
+                  );
+                })}
               </tr>
             </thead>
 
