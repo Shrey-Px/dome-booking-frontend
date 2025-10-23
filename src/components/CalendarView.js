@@ -1,4 +1,4 @@
-// CalendarView.js - Complete Fixed Version with all functions
+// CalendarView.js - Updated with Cricket Support
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, ChevronDown, Calendar, Clock, User, RefreshCw, List, Grid } from 'lucide-react';
 import { useFacility } from './FacilityLoader';
@@ -28,6 +28,20 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
     name: court.name,
     sport: court.sport
   })) || [];
+
+  // Helper function to get sport-specific color
+  const getSportColor = (sport) => {
+    if (sport === 'Cricket') return '#F97316'; // Orange
+    if (sport === 'Pickleball') return '#3B82F6'; // Blue
+    return '#4ADE80'; // Green (Badminton default)
+  };
+
+  // Helper function to get sport-specific price
+  const getSportPrice = (sport) => {
+    if (sport === 'Cricket') return '45';
+    if (sport === 'Pickleball') return '30';
+    return '25'; // Badminton default
+  };
 
   const getTimeSlots = () => {
     if (!facility?.operatingHours) {
@@ -127,12 +141,10 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
   // Listen for booking events
   useEffect(() => {
     const handleBookingCancelled = () => {
-      // console.log('Booking cancelled, refreshing availability...');
       loadAvailability();
     };
 
     const handleRefreshAvailability = () => {
-      // console.log('Manual refresh requested...');
       loadAvailability();
     };
 
@@ -156,8 +168,6 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
   
     try {
       const dateStr = selectedDate.toISOString().split('T')[0];
-      
-      // console.log('Loading availability for facility:', facilitySlug, 'date:', dateStr);
       const data = await ApiService.getAvailability(facilitySlug, dateStr);
     
       if (data && data.availability) {
@@ -445,6 +455,7 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
       {courts.map(court => {
         const availableSlots = getCourtAvailableSlots(court.id);
         const isFullyBooked = isCourtFullyBooked(court.id);
+        const sportPrice = getSportPrice(court.sport);
         
         return (
           <div key={court.id} className="bg-white rounded-lg shadow-sm border border-gray-200">
@@ -492,7 +503,7 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
                       <div className="font-medium">{time}</div>
                       {status !== 'past' && (
                         <div className="text-xs mt-1">
-                          {isAvailable ? `$${facility?.pricing?.courtRental || 25}` : 'Booked'}
+                          {isAvailable ? `$${sportPrice}` : 'Booked'}
                         </div>
                       )}
                     </button>
@@ -777,7 +788,7 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
       {!isMobile && (
         <div className="max-w-7xl mx-auto px-6 py-4 bg-white border-b">
           <h1 className="text-2xl font-bold text-gray-900 text-left">
-            Vision Badminton Centre
+            {facility?.name || 'Loading...'}
           </h1>
         </div>
       )}
@@ -874,42 +885,44 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
                 <Clock size={16} className="inline mr-2" />
                 Time
               </div>
-              {courts.map((court) => (
-                <div 
-                  key={court.id} 
-                  className="text-center border-l"
-                  style={{ 
-                    padding: '16px',
-                    borderColor: '#E5E7EB'
-                  }}
-                >
+              {courts.map((court) => {
+                const sportColor = getSportColor(court.sport);
+                return (
                   <div 
-                    className="font-semibold"
+                    key={court.id} 
+                    className="text-center border-l"
                     style={{ 
-                      fontSize: '18px',
-                      color: '#111827'
+                      padding: '16px',
+                      borderColor: '#E5E7EB'
                     }}
                   >
-                    {court.name}
-                  </div>
-                  <div 
-                    className="flex items-center justify-center mt-1"
-                    style={{ 
-                      fontSize: '14px',
-                      color: '#6B7280'
-                    }}
-                  >
-                    <span 
-                      className="inline-block w-2 h-2 rounded-full mr-2"
+                    <div 
+                      className="font-semibold"
                       style={{ 
-                        backgroundColor: isCourtFullyBooked(court.id) ? '#EF4444' :
-                                        court.sport === 'Pickleball' ? '#3B82F6' : '#4ADE80' 
+                        fontSize: '18px',
+                        color: '#111827'
                       }}
-                    ></span>
-                    {court.sport}
+                    >
+                      {court.name}
+                    </div>
+                    <div 
+                      className="flex items-center justify-center mt-1"
+                      style={{ 
+                        fontSize: '14px',
+                        color: '#6B7280'
+                      }}
+                    >
+                      <span 
+                        className="inline-block w-2 h-2 rounded-full mr-2"
+                        style={{ 
+                          backgroundColor: isCourtFullyBooked(court.id) ? '#EF4444' : sportColor
+                        }}
+                      ></span>
+                      {court.sport}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="divide-y" style={{ borderColor: '#F3F4F6' }}>
@@ -946,6 +959,8 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
                     const time24 = convertTo24Hour(time);
                     const isPastSlot = isTimeSlotInPast(time);
                     const isAvailable = availability[court.id]?.[time24] === true;
+                    const sportColor = getSportColor(court.sport);
+                    const sportPrice = getSportPrice(court.sport);
                   
                     return (
                       <div
@@ -975,7 +990,7 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
                               className="font-semibold mb-1"
                               style={{ 
                                 fontSize: '12px',
-                                color: court.sport === 'Pickleball' ? '#3B82F6' : '#059669'
+                                color: sportColor
                               }}
                             >
                               AVAILABLE
@@ -986,7 +1001,7 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
                                 color: '#6B7280'
                               }}
                             >
-                              ${court.sport === 'Pickleball' ? '30' : '25'}/hour
+                              ${sportPrice}/hour
                             </div>
                           </div>
                         ) : (

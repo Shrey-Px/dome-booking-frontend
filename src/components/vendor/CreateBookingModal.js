@@ -76,32 +76,14 @@ const CreateBookingModal = ({ isOpen, onClose, selectedDate, courts, onBookingCr
         throw new Error('Please fill in all required fields');
       }
 
-      // Extract court number correctly
-      let courtNumber, courtName;
-      const selectedCourt = courts.find(c => c.name === formData.courtName);
-    
-      if (selectedCourt) {
-        courtNumber = selectedCourt.id;
-        // Standardize court names for database
-        if (selectedCourt.sport === 'Pickleball') {
-          // Use "Court 23" format for consistency
-          courtName = `Court ${courtNumber}`;
-        } else {
-          courtName = selectedCourt.name;
-        }
-      } else {
-        courtNumber = parseInt(formData.courtName.match(/\d+/)?.[0] || 0);
-        courtName = formData.courtName;
-      }
-
       // Calculate end time (1 hour after start)
       const startHour = parseInt(formData.startTime.split(':')[0]);
       const endHour = (startHour + 1).toString().padStart(2, '0');
       const endTime = `${endHour}:00`;
 
       const bookingData = {
-        courtName: courtName,
-        courtNumber: courtNumber,
+        courtName: formData.courtName,
+        courtNumber: parseInt(formData.courtName.match(/\d+/)?.[0] || 0),
         date: formData.date,
         startTime: formData.startTime,
         endTime: endTime,

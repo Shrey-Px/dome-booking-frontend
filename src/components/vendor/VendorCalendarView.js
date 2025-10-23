@@ -36,13 +36,10 @@ const VendorCalendarView = ({ selectedDate, onDateChange, courts = [], operating
       name: `Court ${i + 1}`,
       sport: 'Badminton',
     }));
-  
-    // Use numeric IDs for Pickleball courts to match customer portal
     const pickleball = [
-      { id: 23, name: 'Court P1', sport: 'Pickleball' },
-      { id: 24, name: 'Court P2', sport: 'Pickleball' },
+      { id: 'P1', name: 'Court P1', sport: 'Pickleball' },
+      { id: 'P2', name: 'Court P2', sport: 'Pickleball' },
     ];
-  
     return [...badminton, ...pickleball];
   }, [courts]);
 
@@ -136,16 +133,13 @@ const VendorCalendarView = ({ selectedDate, onDateChange, courts = [], operating
     const direct = nameToId.get(lc);
     if (direct) return direct;
 
-    // Handle "Court P1", "Court P2" -> 23, 24
-    if (lc.includes('court p1') || lc === 'p1') return '23';
-    if (lc.includes('court p2') || lc === 'p2') return '24';
-  
-    // Handle "Court 23", "Court 24" (from customer portal)
+    // "Court P1", "P1", "Pickleball Court 1", etc.
+    const p = lc.match(/p\s*([0-9]+)/i);
+    if (p) return `P${p[1]}`;
+
+    // Badminton "Court 7" -> "7"
     const n = lc.match(/(\d+)/);
-    if (n) {
-      const num = parseInt(n[1], 10);
-      return String(num);
-    }
+    if (n) return String(parseInt(n[1], 10));
 
     return lc;
   };

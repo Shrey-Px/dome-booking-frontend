@@ -25,7 +25,9 @@ export const calculateBookingPrice = (facility, duration = 60, discountAmount = 
   }
   
   // Apply sport-specific pricing
-  if (sport === 'Pickleball') {
+  if (sport === 'Cricket') {
+    courtRental = 45.00;  // ✅ ADD THIS LINE
+  } else if (sport === 'Pickleball') {
     courtRental = 30.00;
   } else if (sport === 'Badminton') {
     courtRental = 25.00;

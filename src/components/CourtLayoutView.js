@@ -1,4 +1,4 @@
-// src/components/CourtLayoutView.js - With Time Slot Selection Modal
+// src/components/CourtLayoutView.js - With Multi-Sport Support (Cricket, Badminton, Pickleball)
 import React, { useState, useEffect } from 'react';
 import { Calendar, RefreshCw, ChevronLeft, ChevronRight, List, Grid, X, Clock } from 'lucide-react';
 import { useFacility } from './FacilityLoader';
@@ -12,7 +12,7 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
   const headerRef = React.useRef(null);
   const [headerHeight, setHeaderHeight] = useState(0);
   
-  // ✅ NEW: Time slot selection modal state
+  // Time slot selection modal state
   const [showTimeModal, setShowTimeModal] = useState(false);
   const [selectedCourtForBooking, setSelectedCourtForBooking] = useState(null);
 
@@ -64,7 +64,7 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
     return null;
   };
 
-  // ✅ NEW: Get available time slots for a court
+  // Get available time slots for a court
   const getAvailableTimeSlots = (courtId) => {
     const courtAvailability = availability[courtId] || {};
     const slots = [];
@@ -79,7 +79,7 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
     return slots.sort((a, b) => a.time24.localeCompare(b.time24));
   };
 
-  // ✅ NEW: Convert 24-hour to 12-hour format
+  // Convert 24-hour to 12-hour format
   const convertTo12Hour = (time24) => {
     const [hours, minutes] = time24.split(':').map(Number);
     const period = hours >= 12 ? 'PM' : 'AM';
@@ -87,13 +87,13 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
     return `${displayHour}:${minutes.toString().padStart(2, '0')} ${period}`;
   };
 
-  // ✅ UPDATED: Open time slot modal when court is clicked
+  // Open time slot modal when court is clicked
   const handleCourtClick = (court) => {
     setSelectedCourtForBooking(court);
     setShowTimeModal(true);
   };
 
-  // ✅ NEW: Handle time slot selection
+  // Handle time slot selection
   const handleTimeSlotSelect = (timeSlot) => {
     if (onBookingSelect && selectedCourtForBooking) {
       onBookingSelect({
@@ -159,7 +159,15 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
     return Object.values(courtAvailability).filter(isAvailable => isAvailable).length;
   };
 
-  const renderCourt = (courtIdentifier, emptySpace = false) => {
+  // Helper to get sport-specific price
+  const getSportPrice = (sport) => {
+    if (sport === 'Cricket') return 45;
+    if (sport === 'Pickleball') return 30;
+    return 25; // Badminton default
+  };
+
+  // Render Badminton Court (Vertical)
+  const renderBadmintonCourt = (courtIdentifier, emptySpace = false) => {
     if (emptySpace) {
       return <div key={`empty-${Math.random()}`} />;
     }
@@ -172,8 +180,6 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
     }
   
     const availableSlots = getAvailableSlots(court.id);
-    const isPickleball = court.sport === 'Pickleball';
-    
     const status = availableSlots > 6 ? 'available' : 
                    availableSlots > 0 ? 'limited' : 
                    'full';
@@ -191,8 +197,7 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
             margin: '0 auto',
             backgroundColor: status === 'available' ? '#F0FDF4' : 
                            status === 'limited' ? '#FEF3C7' : '#FEF2F2',
-            borderColor: isPickleball ? '#3B82F6' : 
-                        status === 'available' ? '#059669' : 
+            borderColor: status === 'available' ? '#059669' : 
                         status === 'limited' ? '#F59E0B' : '#DC2626'
           }}
         >
@@ -244,6 +249,7 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
     );
   };
 
+  // Render Pickleball Court (Horizontal)
   const renderPickleballCourt = (courtIdentifier) => {
     const court = getCourtById(courtIdentifier);
     
@@ -321,6 +327,104 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
     );
   };
 
+  // ✅ NEW: Render Cricket Lane (Horizontal with pitch markings)
+  const renderCricketLane = (courtIdentifier) => {
+    const court = getCourtById(courtIdentifier);
+    
+    if (!court) {
+      console.warn('Cricket lane not found:', courtIdentifier);
+      return null;
+    }
+  
+    const availableSlots = getAvailableSlots(court.id);
+    const status = availableSlots > 6 ? 'available' : 
+                   availableSlots > 0 ? 'limited' : 
+                   'full';
+  
+    return (
+      <div
+        key={court.id}
+        onClick={() => handleCourtClick(court)}
+        className="cursor-pointer transform transition-all hover:scale-105 hover:shadow-lg"
+      >
+        <div 
+          className="aspect-[4/1] rounded-lg border-4 relative p-3"
+          style={{
+            maxWidth: '320px',
+            margin: '0 auto',
+            backgroundColor: status === 'available' ? '#FFF7ED' : 
+                           status === 'limited' ? '#FEF3C7' : '#FEF2F2',
+            borderColor: '#F97316' // Orange for cricket
+          }}
+        >
+          <div className="absolute inset-4">
+            <div className="w-full h-full border-2 border-orange-400 relative">
+              {/* Cricket pitch - central strip */}
+              <div className="absolute inset-y-2 left-1/2 transform -translate-x-1/2 w-1/3 bg-orange-50 border-2 border-orange-300 rounded"></div>
+              
+              {/* Bowling crease lines */}
+              <div className="absolute top-0 bottom-0 border-l-2 border-orange-400" style={{ left: '30%' }}></div>
+              <div className="absolute top-0 bottom-0 border-l-2 border-orange-400" style={{ left: '70%' }}></div>
+              
+              {/* Stumps markers */}
+              <div className="absolute top-1/2 transform -translate-y-1/2 w-1 h-3 bg-orange-600" style={{ left: '28%' }}></div>
+              <div className="absolute top-1/2 transform -translate-y-1/2 w-1 h-3 bg-orange-600" style={{ left: '72%' }}></div>
+              
+              {/* Batting boxes */}
+              <div className="absolute inset-y-1/3 left-[25%] w-8 h-1/3 border border-orange-300"></div>
+              <div className="absolute inset-y-1/3 right-[25%] w-8 h-1/3 border border-orange-300"></div>
+            </div>
+          </div>
+          
+          <div 
+            className="absolute top-2 right-2 w-4 h-4 rounded-full"
+            style={{
+              backgroundColor: status === 'available' ? '#F97316' : 
+                             status === 'limited' ? '#F59E0B' : '#DC2626'
+            }}
+          ></div>
+          
+          {loading && (
+            <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center rounded-lg">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-500"></div>
+            </div>
+          )}
+        </div>
+        
+        <div className="mt-3 text-center">
+          <h3 className="font-semibold text-lg text-gray-900">
+            {court.name}
+          </h3>
+          <p className="text-sm text-orange-600 font-medium">
+            {court.sport}
+          </p>
+          <p 
+            className="text-sm font-medium"
+            style={{
+              color: status === 'available' ? '#F97316' : 
+                     status === 'limited' ? '#F59E0B' : '#DC2626'
+            }}
+          >
+            {status === 'available' ? `${availableSlots} slots` :
+             status === 'limited' ? `${availableSlots} left` :
+             'Full'}
+          </p>
+        </div>
+      </div>
+    );
+  };
+
+  // ✅ Helper to determine which courts belong to which sport
+  const getCourtsBySport = () => {
+    if (!facility?.courts) return { badminton: [], pickleball: [], cricket: [] };
+    
+    const badminton = facility.courts.filter(c => c.sport === 'Badminton');
+    const pickleball = facility.courts.filter(c => c.sport === 'Pickleball');
+    const cricket = facility.courts.filter(c => c.sport === 'Cricket');
+    
+    return { badminton, pickleball, cricket };
+  };
+
   if (loading && !facility) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -332,9 +436,11 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
     );
   }
 
+  const { badminton, pickleball, cricket } = getCourtsBySport();
+
   return (
     <div className="h-screen overflow-hidden" style={{ backgroundColor: '#F9FAFB' }}>
-      {/* Header - Same as before */}
+      {/* Header */}
       <div
         ref={headerRef}
         className="text-white sticky top-0 z-10"
@@ -457,110 +563,152 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
       {!isMobile && (
         <div className="max-w-7xl mx-auto px-6 py-4 bg-white border-b">
           <h1 className="text-2xl font-bold text-gray-900 text-left">
-            {facility?.name || 'Vision Badminton Centre'}
+            {facility?.name || 'Loading...'}
           </h1>
         </div>
       )}
 
-      {/* Court Layout - Same as before */}
+      {/* Court Layout */}
       <div className="overflow-y-auto" style={{ height: 'calc(100vh - 100px)' }}>
         <div className="max-w-7xl mx-auto px-6 py-8">
           
-          {/* Badminton Courts */}
-          <div className="mb-12">
-            <div className="flex items-center justify-between mb-6 sticky top-0 bg-gray-50 py-3 z-10">
-              <div className="flex items-center">
-                <h2 className="text-2xl font-bold text-gray-900">🏸 Badminton Courts</h2>
-                <span className="ml-4 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
-                  $25/hour
-                </span>
+          {/* ✅ Cricket Lanes Section */}
+          {cricket.length > 0 && (
+            <div className="mb-12">
+              <div className="flex items-center justify-between mb-6 sticky top-0 bg-gray-50 py-3 z-10">
+                <div className="flex items-center">
+                  <h2 className="text-2xl font-bold text-gray-900">🏏 Cricket Lanes</h2>
+                  <span className="ml-4 px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-semibold">
+                    $45/hour
+                  </span>
+                </div>
+                <div className="text-sm text-gray-600">{cricket.length} lanes total</div>
               </div>
-              <div className="text-sm text-gray-600">22 courts total</div>
-            </div>
 
-            <div className="grid grid-cols-4 gap-4 mb-6">
-              {renderCourt(null, true)}
-              {renderCourt(18)}
-              {renderCourt(17)}
-              {renderCourt(16)}
-            </div>
-
-            <div className="grid grid-cols-4 gap-4 mb-6">
-              {renderCourt(null, true)}
-              {renderCourt(15)}
-              {renderCourt(14)}
-              {renderCourt(13)}
-            </div>
-
-            <div className="grid grid-cols-4 gap-4 mb-6">
-              {renderCourt(22)}
-              {renderCourt(12)}
-              {renderCourt(11)}
-              {renderCourt(10)}
-            </div>
-
-            <div className="grid grid-cols-4 gap-4 mb-6">
-              {renderCourt(21)}
-              {renderCourt(9)}
-              {renderCourt(8)}
-              {renderCourt(7)}
-            </div>
-
-            <div className="grid grid-cols-4 gap-4 mb-6">
-              {renderCourt(20)}
-              {renderCourt(6)}
-              {renderCourt(5)}
-              {renderCourt(4)}
-            </div>
-
-            <div className="grid grid-cols-4 gap-4">
-              {renderCourt(19)}
-              {renderCourt(3)}
-              {renderCourt(2)}
-              {renderCourt(1)}
-            </div>
-          </div>
-
-          {/* Pickleball Courts */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-6 sticky top-0 bg-gray-50 py-3 z-10">
-              <div className="flex items-center">
-                <h2 className="text-2xl font-bold text-gray-900">🎾 Pickleball Courts</h2>
-                <span className="ml-4 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
-                  $30/hour
-                </span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {cricket.map(court => renderCricketLane(court.name))}
               </div>
-              <div className="text-sm text-gray-600">2 courts total</div>
             </div>
+          )}
 
-            <div className="grid grid-cols-1 gap-6 max-w-sm mx-auto">
-              {renderPickleballCourt('Court P1')}
-              {renderPickleballCourt('Court P2')}
+          {/* Badminton Courts Section */}
+          {badminton.length > 0 && (
+            <div className="mb-12">
+              <div className="flex items-center justify-between mb-6 sticky top-0 bg-gray-50 py-3 z-10">
+                <div className="flex items-center">
+                  <h2 className="text-2xl font-bold text-gray-900">🏸 Badminton Courts</h2>
+                  <span className="ml-4 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
+                    $25/hour
+                  </span>
+                </div>
+                <div className="text-sm text-gray-600">{badminton.length} courts total</div>
+              </div>
+
+              {/* Vision Badminton specific layout */}
+              {badminton.length === 22 ? (
+                <>
+                  <div className="grid grid-cols-4 gap-4 mb-6">
+                    {renderBadmintonCourt(null, true)}
+                    {renderBadmintonCourt(18)}
+                    {renderBadmintonCourt(17)}
+                    {renderBadmintonCourt(16)}
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-4 mb-6">
+                    {renderBadmintonCourt(null, true)}
+                    {renderBadmintonCourt(15)}
+                    {renderBadmintonCourt(14)}
+                    {renderBadmintonCourt(13)}
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-4 mb-6">
+                    {renderBadmintonCourt(22)}
+                    {renderBadmintonCourt(12)}
+                    {renderBadmintonCourt(11)}
+                    {renderBadmintonCourt(10)}
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-4 mb-6">
+                    {renderBadmintonCourt(21)}
+                    {renderBadmintonCourt(9)}
+                    {renderBadmintonCourt(8)}
+                    {renderBadmintonCourt(7)}
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-4 mb-6">
+                    {renderBadmintonCourt(20)}
+                    {renderBadmintonCourt(6)}
+                    {renderBadmintonCourt(5)}
+                    {renderBadmintonCourt(4)}
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-4">
+                    {renderBadmintonCourt(19)}
+                    {renderBadmintonCourt(3)}
+                    {renderBadmintonCourt(2)}
+                    {renderBadmintonCourt(1)}
+                  </div>
+                </>
+              ) : (
+                // Generic grid for other facilities
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {badminton.map(court => renderBadmintonCourt(court.name))}
+                </div>
+              )}
             </div>
-          </div>
+          )}
+
+          {/* Pickleball Courts Section */}
+          {pickleball.length > 0 && (
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-6 sticky top-0 bg-gray-50 py-3 z-10">
+                <div className="flex items-center">
+                  <h2 className="text-2xl font-bold text-gray-900">🎾 Pickleball Courts</h2>
+                  <span className="ml-4 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
+                    $30/hour
+                  </span>
+                </div>
+                <div className="text-sm text-gray-600">{pickleball.length} courts total</div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+                {pickleball.map(court => renderPickleballCourt(court.name))}
+              </div>
+            </div>
+          )}
 
           {/* Legend */}
           <div className="mt-12 p-6 bg-white rounded-lg shadow-lg">
-            <h3 className="font-bold text-gray-900 mb-4 text-lg">Court Information</h3>
+            <h3 className="font-bold text-gray-900 mb-4 text-lg">Facility Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <h4 className="font-semibold text-gray-700 mb-3">Court Types</h4>
+                <h4 className="font-semibold text-gray-700 mb-3">Court/Lane Types</h4>
                 <div className="space-y-2">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-6 h-6 border-3 rounded" style={{ borderColor: '#10B981', borderWidth: '3px' }}></div>
-                    <span className="text-gray-700">Badminton Courts (22) - $25/hour</span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-6 h-6 border-3 rounded" style={{ borderColor: '#3B82F6', borderWidth: '3px' }}></div>
-                    <span className="text-gray-700">Pickleball Courts (2) - $30/hour</span>
-                  </div>
+                  {cricket.length > 0 && (
+                    <div className="flex items-center space-x-3">
+                      <div className="w-6 h-6 border-3 rounded" style={{ borderColor: '#F97316', borderWidth: '3px' }}></div>
+                      <span className="text-gray-700">Cricket Lanes ({cricket.length}) - $45/hour</span>
+                    </div>
+                  )}
+                  {badminton.length > 0 && (
+                    <div className="flex items-center space-x-3">
+                      <div className="w-6 h-6 border-3 rounded" style={{ borderColor: '#10B981', borderWidth: '3px' }}></div>
+                      <span className="text-gray-700">Badminton Courts ({badminton.length}) - $25/hour</span>
+                    </div>
+                  )}
+                  {pickleball.length > 0 && (
+                    <div className="flex items-center space-x-3">
+                      <div className="w-6 h-6 border-3 rounded" style={{ borderColor: '#3B82F6', borderWidth: '3px' }}></div>
+                      <span className="text-gray-700">Pickleball Courts ({pickleball.length}) - $30/hour</span>
+                    </div>
+                  )}
                 </div>
               </div>
               <div>
                 <h4 className="font-semibold text-gray-700 mb-3">Operating Hours</h4>
                 <div className="space-y-2 text-sm text-gray-600">
-                  <div>Weekdays: 8:00 AM - 8:00 PM</div>
-                  <div>Weekends: 6:00 AM - 10:00 PM</div>
+                  <div>Weekdays: {facility?.operatingHours?.weekday?.start || '8:00'} - {facility?.operatingHours?.weekday?.end || '20:00'}</div>
+                  <div>Weekends: {facility?.operatingHours?.weekend?.start || '6:00'} - {facility?.operatingHours?.weekend?.end || '22:00'}</div>
                 </div>
               </div>
             </div>
@@ -568,7 +716,7 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
         </div>
       </div>
 
-      {/* ✅ NEW: Time Slot Selection Modal */}
+      {/* Time Slot Selection Modal */}
       {showTimeModal && selectedCourtForBooking && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
@@ -580,6 +728,12 @@ const CourtLayoutView = ({ onBookingSelect, selectedDate, setSelectedDate, viewM
                 </p>
                 <p className="text-sm text-gray-500 mt-1">
                   {formatDate(selectedDate)}
+                </p>
+                <p className="text-sm font-semibold mt-1" style={{ 
+                  color: selectedCourtForBooking.sport === 'Cricket' ? '#F97316' :
+                         selectedCourtForBooking.sport === 'Pickleball' ? '#3B82F6' : '#10B981'
+                }}>
+                  ${getSportPrice(selectedCourtForBooking.sport)}/hour
                 </p>
               </div>
               <button

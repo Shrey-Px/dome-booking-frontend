@@ -1,6 +1,7 @@
-// src/utils/vendorPricing.js
 export const getCourtPrice = (sport) => {
-  return sport === 'Pickleball' ? 30.00 : 25.00;
+  if (sport === 'Cricket') return 45.00;      // ✅ ADD THIS LINE
+  if (sport === 'Pickleball') return 30.00;
+  return 25.00; // Default (Badminton)
 };
 
 export const formatCourtInfo = (court) => {
