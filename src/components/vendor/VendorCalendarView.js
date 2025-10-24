@@ -200,7 +200,7 @@ const VendorCalendarView = ({ selectedDate, onDateChange, courts = [], operating
     }
 
     // Available state — centered + color by sport
-    const availableColor = court.sport === 'Pickleball' ? '#3B82F6' : '#10B981';
+    const availableColor = court.sport === 'Pickleball' ? '#3B82F6' : '#059669';
     return (
       <div className="h-full bg-white hover:bg-gray-50 transition-colors flex items-center justify-center">
         <div className="text-xs font-medium" style={{ color: availableColor }}>Available</div>
@@ -273,7 +273,7 @@ const VendorCalendarView = ({ selectedDate, onDateChange, courts = [], operating
                   
                   // Calculate color based on sport
                   const color = court.sport === 'Cricket' ? '#F97316' : 
-                                court.sport === 'Pickleball' ? '#3B82F6' : '#10B981';
+                                court.sport === 'Pickleball' ? '#3B82F6' : '#059669';
                   
                   return (
                     <th key={court.id} className="px-4 py-3 text-center border-b min-w-[120px]">
@@ -298,7 +298,7 @@ const VendorCalendarView = ({ selectedDate, onDateChange, courts = [], operating
                     <div className="flex items-center space-x-2">
                       <span
                         className="w-2 h-2 rounded-full"
-                        style={{ backgroundColor: isTimeFullyBooked(time) ? '#EF4444' : '#10B981' }}
+                        style={{ backgroundColor: isTimeFullyBooked(time) ? '#EF4444' : '#059669' }}
                       ></span>
                       <span>{time}</span>
                     </div>

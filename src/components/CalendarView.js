@@ -950,7 +950,7 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
                       <span 
                         className="ml-2 w-2 h-2 rounded-full"
                         style={{ 
-                          backgroundColor: isTimeSlotFullyBooked(time) ? '#EF4444' : '#4ADE80' 
+                          backgroundColor: isTimeSlotFullyBooked(time) ? '#EF4444' : '#059669' 
                         }}
                       ></span>
                     </div>
