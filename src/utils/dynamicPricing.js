@@ -1,4 +1,4 @@
-// src/utils/dynamicPricing.js - New file for time-based pricing
+// src/utils/dynamicPricing.js
 export const getPriceForTimeSlot = (sport, date, hour) => {
   const dayOfWeek = date.getDay();
   const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
@@ -17,6 +17,11 @@ export const getPriceForTimeSlot = (sport, date, hour) => {
     return 35; // Default
   }
   
+  // Cricket or other sports
+  if (sport === 'Cricket') {
+    return 45;
+  }
+  
   return 25; // Fallback
 };
 
@@ -29,7 +34,7 @@ export const calculateBookingPriceNoTax = (facility, sport, date, hour, duration
   const serviceFeePercentage = facility?.pricing?.serviceFeePercentage || 1.0;
   const serviceFee = courtRental * (serviceFeePercentage / 100);
   
-  // Total without tax
+  // Total without tax (tax is included in the price)
   const total = courtRental + serviceFee - discountAmount;
   
   return {
