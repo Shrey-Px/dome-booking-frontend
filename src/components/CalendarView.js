@@ -33,7 +33,7 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
   const getSportColor = (sport) => {
     if (sport === 'Cricket') return '#F97316'; // Orange
     if (sport === 'Pickleball') return '#3B82F6'; // Blue
-    return '#4ADE80'; // Green (Badminton default)
+    return '#059669'; // Green (Badminton default)
   };
 
   // Helper function to get sport-specific price
