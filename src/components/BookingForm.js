@@ -155,35 +155,29 @@ const BookingForm = ({
           
           {/* Enhanced pricing breakdown */}
           <div className="pt-2 border-t">
-            <div className="flex justify-between text-sm">
-              <span>Court Rental:</span>
-              <span>${paymentData.courtRental?.toFixed(2) || '25.00'}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span>Service Fee (1%):</span>
-              <span>${paymentData.serviceFee?.toFixed(2) || '0.25'}</span>
-            </div>
-            {(paymentData.discountAmount > 0) && (
-              <div className="flex justify-between text-green-600 text-sm">
-                <span>Discount Applied:</span>
-                <span>-${paymentData.discountAmount.toFixed(2)}</span>
-              </div>
-            )}
-            <div className="flex justify-between text-sm">
-              <span>Subtotal:</span>
-              <span>${paymentData.subtotal?.toFixed(2) || '25.25'}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span>Tax (13% HST):</span>
-              <span>${paymentData.tax?.toFixed(2) || '3.28'}</span>
-            </div>
-            <div className="flex justify-between font-bold text-lg pt-1 border-t">
-              <span>Total:</span>
-              {/* FIXED: Check both property names */}
-              <span className="text-red-600">
-                ${(paymentData.finalAmount || paymentData.finalTotal)?.toFixed(2) || '28.53'}
-              </span>
-            </div>
+            <div className="flex justify-between text-sm">
+              <span>Court Rental:</span>
+              <span>${paymentData.courtRental?.toFixed(2) || '0.00'}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span>Service Fee (1%):</span>
+              <span>${paymentData.serviceFee?.toFixed(2) || '0.00'}</span>
+            </div>
+            {paymentData.discountAmount > 0 && (
+              <div className="flex justify-between text-green-600 text-sm">
+                <span>Discount Applied:</span>
+                <span>-${paymentData.discountAmount.toFixed(2)}</span>
+              </div>
+            )}
+            <div className="flex justify-between font-bold text-lg pt-1 border-t">
+              <span>Total (tax included):</span>
+              <span className="text-red-600">
+                ${((paymentData.finalAmount || paymentData.finalTotal) ?? 0).toFixed(2)}
+              </span>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              *Price includes all applicable taxes
+            </p>
           </div>
         </div>
       </div>

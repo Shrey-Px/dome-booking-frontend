@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, ChevronDown, Calendar, Clock, User, RefreshCw, List, Grid } from 'lucide-react';
 import { useFacility } from './FacilityLoader';
 import ApiService from '../services/api';
+import SportSelectionModal from './SportSelectionModal';
 
 const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange, selectedDate, setSelectedDate }) => {
   // Get facility context instead of hardcoding
@@ -21,6 +22,8 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
   const [selectedMobileCourt, setSelectedMobileCourt] = useState(null);
   const headerRef = React.useRef(null);
   const [headerHeight, setHeaderHeight] = useState(0);
+  const [showSportModal, setShowSportModal] = useState(false);
+  const [pendingSelection, setPendingSelection] = useState(null);
   
   // Get courts from facility instead of hardcoding
   const courts = facility?.courts?.map(court => ({
@@ -317,31 +320,66 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
     }
   };
 
+  // Update handleSlotClick function
   const handleSlotClick = (court, time) => {
-    const time24 = convertTo24Hour(time);
-    const isPastSlot = isTimeSlotInPast(time);
-    
-    if (isPastSlot) {
-      alert('Cannot book time slots in the past. Please select a future time slot.');
-      return;
-    }
+    const time24 = convertTo24Hour(time);
+    const isPastSlot = isTimeSlotInPast(time);
+    
+    if (isPastSlot) {
+      alert('Cannot book time slots in the past. Please select a future time slot.');
+      return;
+    }
 
-    const isAvailable = availability[court.id]?.[time24] === true;
-    
-    if (!isAvailable) {
-      alert('This time slot is not available. Please select another time.');
-      return;
+    const isAvailable = availability[court.id]?.[time24] === true;
+    
+    if (!isAvailable) {
+      alert('This time slot is not available. Please select another time.');
+      return;
+    }
+    
+    // Check if this is a dual-sport court
+    const isDualSport = court.id >= 19 && court.id <= 22;
+    
+    if (isDualSport) {
+      // Show sport selection modal
+      setPendingSelection({ court, time, time24 });
+      setShowSportModal(true);
+    } else {
+      // Direct booking for single-sport courts
+      if (onBookingSelect) {
+        const hour = parseInt(time24.split(':')[0]);
+        const price = getPriceForTimeSlot(court.sport, selectedDate, hour);
+        
+        onBookingSelect({
+          court,
+          time,
+          time24,
+          date: selectedDate,
+          displayTime: time,
+          price
+        });
+      }
+    }
+  };
+
+  // Add this function to get price for a specific time
+  const getSlotPrice = (court, time) => {
+    const time24 = convertTo24Hour(time);
+    const hour = parseInt(time24.split(':')[0]);
+  
+    // Handle dual-sport courts (19-22)
+    const isDualSport = court.id >= 19 && court.id <= 22;
+    if (isDualSport) {
+      // Show both prices for dual courts
+      const badmintonPrice = getPriceForTimeSlot('Badminton', selectedDate, hour);
+      const pickleballPrice = getPriceForTimeSlot('Pickleball', selectedDate, hour);
+      return { badminton: badmintonPrice, pickleball: pickleballPrice, dual: true };
     }
-    
-    if (onBookingSelect) {
-      onBookingSelect({
-        court,
-        time,
-        time24,
-        date: selectedDate,
-        displayTime: time
-      });
-    }
+  
+    return { 
+      price: getPriceForTimeSlot(court.sport, selectedDate, hour), 
+      dual: false 
+    };
   };
 
   const getSlotStatus = (court, time) => {
@@ -982,28 +1020,35 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
                         }}
                         onClick={() => !isPastSlot && handleSlotClick(court, time)}
                       >
+                        // Update the slot rendering in the calendar grid:
                         {isPastSlot ? (
-                          <div className="text-center"></div>
+                          <div className="text-center"></div>
                         ) : isAvailable ? (
-                          <div className="text-center">
-                            <div 
-                              className="font-semibold mb-1"
-                              style={{ 
-                                fontSize: '12px',
-                                color: sportColor
-                              }}
-                            >
-                              AVAILABLE
-                            </div>
-                            <div 
-                              style={{ 
-                                fontSize: '10px',
-                                color: '#6B7280'
-                              }}
-                            >
-                              ${sportPrice}/hour
-                            </div>
-                          </div>
+                          <div className="text-center">
+                            <div 
+                              className="font-semibold mb-1"
+                              style={{ 
+                                fontSize: '12px',
+                                color: court.sport === 'Pickleball' ? '#3B82F6' : '#059669'
+                              }}
+                            >
+                              AVAILABLE
+                            </div>
+                            <div style={{ fontSize: '10px', color: '#6B7280' }}>
+                              {(() => {
+                                const pricing = getSlotPrice(court, time);
+                                if (pricing.dual) {
+                                  return (
+                                    <>
+                                      <div>B: ${pricing.badminton}/hr</div>
+                                      <div>P: ${pricing.pickleball}/hr</div>
+                                    </>
+                                  );
+                                }
+                                return `$${pricing.price}/hour`;
+                              })()}
+                            </div>
+                          </div>
                         ) : (
                           <div className="text-center">
                             <div 
@@ -1073,6 +1118,24 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
         </div>
       )}
     </div>
+    // Add the modal component in the render
+    <SportSelectionModal
+      isOpen={showSportModal}
+      onClose={() => setShowSportModal(false)}
+      court={pendingSelection?.court}
+      time={pendingSelection?.time}
+      date={selectedDate}
+      onSelect={(selection) => {
+        if (onBookingSelect) {
+          onBookingSelect({
+            ...selection,
+            time24: pendingSelection.time24,
+            displayTime: selection.time
+          });
+        }
+        setShowSportModal(false);
+      }}
+    />
   </div>
   );
 };
