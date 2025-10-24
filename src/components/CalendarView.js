@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, ChevronDown, Calendar, Clock, User, RefreshC
 import { useFacility } from './FacilityLoader';
 import ApiService from '../services/api';
 import SportSelectionModal from './SportSelectionModal';
+import { getPriceForTimeSlot } from '../utils/dynamicPricing';
 
 const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange, selectedDate, setSelectedDate }) => {
   // Get facility context instead of hardcoding
