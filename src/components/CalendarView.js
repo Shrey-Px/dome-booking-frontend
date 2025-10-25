@@ -1021,7 +1021,6 @@ const CalendarView = ({ onBookingSelect, viewMode = 'calendar', onViewModeChange
                         }}
                         onClick={() => !isPastSlot && handleSlotClick(court, time)}
                       >
-                        // Update the slot rendering in the calendar grid:
                         {isPastSlot ? (
                           <div className="text-center"></div>
                         ) : isAvailable ? (
